@@ -1,0 +1,10 @@
+name: SARS-Cov-2-Africa-dashboard
+channels:
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - streamlit=1.2.0
+  - pandas
+  - xlrd=1.2.0
+  - geopandas
