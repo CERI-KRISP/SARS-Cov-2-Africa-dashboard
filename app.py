@@ -70,10 +70,10 @@ st.sidebar.markdown("Contact email: tulio@sun.ac.za")
 st.title("SARS-COV-2 DASHBOARD")
 st.markdown("#### Results Updated – 15 November 2021")
 
-
 with st.container():
     fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x', color='pangolin_africa', color_discrete_sequence=px.colors.qualitative.Prism,
-             barmode='stack', title="Africa - Top 20 circulating lineages and variants")
+             barmode='stack', title="Africa - Top 20 circulating lineages and variants",
+                 custom_data=['pangolin_africa', 'Count_x', 'date2'], labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
     fig.update_yaxes(title="Proportion of Genomes")
     fig.update_xaxes(title="Date")
     fig.update_layout(legend=dict(
