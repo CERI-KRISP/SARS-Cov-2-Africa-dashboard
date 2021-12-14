@@ -15,6 +15,18 @@ st.set_page_config(
 #### INPUTS ######
 df_africa_path = "./data/africa.csv"
 
+##### Palette colors #####
+main_lineages_color_scheme = {'A': '#6c483a', 'A.23.1': '#9f8377', # more: https://coolors.co/6c483a-9f8377-aea198-b9b8ae-cdcfc8
+                        'B.1': '#586f6b', 'B.1.1': '#7f9183', 'B.1.1.1': '#b8b8aa', 'B.1.1.318/AZ.x': '#cfc0bd', 'B.1.16': '#DDD5D0',
+                        'B.1.1.448': '#d4baca', 'B.1.1.54': '#e69ac8', 'B.1.1.529 (Omicron)': '#e83368', # pink
+                        'B.1.1.7 (Alpha)' : '#696969', # more: https://coolors.co/696969-c9c9c9 grey
+                        'B.1.237': '#faf0ca', 'B.1.351 (Beta)' : '#ffe45e', 'B.1.351': '#ffe45e', # yellow
+                        'B.1.525 (Eta)': '#cdb4db', 'B.1.540': '#c7e8f3', 'B.1.549': '#FFDDD2',
+                        'B.1.617.2/AY.x (Delta)': '#2a9d8f',
+                        'C.1/C.1.1/C.1.2': '#0D5789', 'C.16': '#3B98C6', 'C.36/C.36.3': '#3B98C6' #more: https://coolors.co/0d5789-3b98c6-edf6f9-ffddd2-e29578
+
+                        }
+
 # #Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
 # st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
@@ -83,8 +95,10 @@ st.title("SARS-COV-2 DASHBOARD")
 st.subheader("Results Updated – 4 December 2021")
 
 with st.container():
-    fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x', color='pangolin_africa', color_discrete_sequence=px.colors.qualitative.Prism,
-             barmode='stack', title="Africa - Top 20 circulating lineages and variants",
+    fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x',
+                 color='pangolin_africa', color_discrete_map=main_lineages_color_scheme,
+                 # color_discrete_sequence=px.colors.qualitative.Prism,
+                barmode='stack', title="Africa - Top 20 circulating lineages and variants",
                  custom_data=['pangolin_africa', 'Count_x', 'date2'], labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
     fig.update_yaxes(title="Proportion of Genomes")
     fig.update_xaxes(title="Date")
