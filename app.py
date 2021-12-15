@@ -1,7 +1,9 @@
 #Import Python Libraries
+import folium
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import geopandas as gpd
 
 from datetime import date, datetime
 
@@ -79,8 +81,8 @@ df_africa = df_africa[mask_lineages]
 try:
     df_africa1 = pd.merge(df_africa, pangolin_count_top20, on='pangolin_lineage2', how='left')
 except pd.errors.MergeError as e:
-    st.write("Error on merge dataframe:")
-    st.write(e)
+    st.error("Error on merge dataframe:")
+    st.error(e)
 
 df_africa1.pangolin_africa[df_africa1.pangolin_africa.isna()] = 'NA'
 
@@ -90,10 +92,33 @@ variants_percentage = variants_percentage.reset_index()
 
 st.sidebar.markdown("Figures updated from [Wilkinson et al. Science 2021](https://www.krisp.org.za/manuscripts/Wilkinson_AfricaGenomics_Science2021.pdf?_ga=2.79914768.662718457.1637830871-1378797665.1637307000)")
 st.sidebar.markdown("Contact email: tulio@sun.ac.za")
+#### End of sidebar
+
 # #Add title and subtitle to the main interface of the app
 st.title("SARS-COV-2 DASHBOARD")
 st.subheader("Results Updated – 4 December 2021")
 
+### Layout of main page
+c1, c2 = st.columns((1.5, 2))
+
+############## MAP CHART ##############
+
+# Reading Africa map and joing with africa_df information
+gdf = gpd.read_file('data/africa.geojson')
+df_map = gdf.merge(df_africa1, left_on="sovereignt", right_on="country", how="outer")
+df_map = df_map[['strain','virus','date','country','division','pangolin_africa','Nextstrain_variants', 'sovereignt', 'sov_a3', 'geometry']]
+
+
+## count strains per country
+count_variants = df_map.groupby(['country','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
+with st.container():
+    fig_map = px.scatter_geo(count_variants,
+                             locations='sov_a3', color='pangolin_africa',
+                             hover_name='country', size='counts')
+    fig_map.update_layout(geo_scope="africa")
+    c1.plotly_chart(fig_map, use_container_width=True)
+
+## Top 20 circulation variants chart
 with st.container():
     fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x',
                  color='pangolin_africa', color_discrete_map=main_lineages_color_scheme,
@@ -105,10 +130,10 @@ with st.container():
     fig.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
-        y=-0.5,
+        y=0.9,
         xanchor="right",
         x=1
-    ), legend_title_text="Lineages", height=600)
-    st.plotly_chart(fig, use_container_width=True)
+    ), legend_title_text="Lineages", height=400)
+    c2.plotly_chart(fig, use_container_width=True)
 
 # TODO: Set colors pallet from Houriyah - idea: gradient color for each variant
