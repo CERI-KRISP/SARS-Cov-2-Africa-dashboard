@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import geopandas as gpd
+import plotly.graph_objects as go
 
 from datetime import date, datetime
 
@@ -24,8 +25,8 @@ main_lineages_color_scheme = {'A': '#6c483a', 'A.23.1': '#9f8377', # more: https
                         'B.1.237': '#faf0ca', 'B.1.351 (Beta)' : '#ffe45e', 'B.1.351': '#ffe45e', # yellow
                         'B.1.525 (Eta)': '#cdb4db', 'B.1.540': '#c7e8f3', 'B.1.549': '#FFDDD2',
                         'B.1.617.2/AY.x (Delta)': '#2a9d8f',
-                        'C.1/C.1.1/C.1.2': '#0D5789', 'C.16': '#3B98C6', 'C.36/C.36.3': '#3B98C6' #more: https://coolors.co/0d5789-3b98c6-edf6f9-ffddd2-e29578
-
+                        'C.1/C.1.1/C.1.2': '#0D5789', 'C.16': '#3B98C6', 'C.36/C.36.3': '#3B98C6', #more: https://coolors.co/0d5789-3b98c6-edf6f9-ffddd2-e29578
+                        'Other Lineages': '#FFFFFF'
                         }
 
 # #Add sidebar to the app
@@ -118,10 +119,13 @@ with st.container():
                              locations='sov_a3', color='counts',
                             labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes'},
                             hover_name='country',
-                             hover_data =['pangolin_africa', 'counts'], color_continuous_scale="Reds")
+                             hover_data =['pangolin_africa', 'counts'], color_continuous_scale="Reds"
+                            )
     fig_map.update_layout(geo_scope="africa")
-    fig_map.update_geos(fitbounds="locations")
-    fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    # fig_map.update_geos(fitbounds="locations")
+    fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                          legend=dict(orientation='h')
+                          )
     c1.plotly_chart(fig_map, use_container_width=True)
 
 ## Top 20 circulation variants chart
@@ -141,3 +145,24 @@ with st.container():
         x=1
     ), legend_title_text="Lineages", height=400)
     c2.plotly_chart(fig, use_container_width=True)
+
+df_country_lineages = df_africa.copy()
+variants = []
+for index, row in df_country_lineages.iterrows():
+    if row['pangolin_lineage2'] in coloured_options:
+        variants.append(row['pangolin_lineage2'])
+    else:
+        variants.append('Other Lineages')
+df_country_lineages['variant'] = variants
+with st.container():
+    country_lineages = px.scatter(df_country_lineages, x="date", y="country", color="variant",
+                 title="Africa countries with sequence data", color_discrete_map=main_lineages_color_scheme)
+    country_lineages.update_traces(marker_size=10)
+    country_lineages.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1,
+        xanchor="right",
+        x=1
+    ), legend_title_text="Variants", height=400)
+    c2.plotly_chart(country_lineages, use_container_width=True)
