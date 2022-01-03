@@ -1,5 +1,4 @@
 #Import Python Libraries
-import folium
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -110,12 +109,14 @@ df_map = df_map[['strain','virus','date','country','division','pangolin_africa',
 
 
 ## count strains per country
-count_variants = df_map.groupby(['country','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
+count_variants = df_map.groupby(['country', 'division','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
 with st.container():
     fig_map = px.scatter_geo(count_variants,
                              locations='sov_a3', color='pangolin_africa',
                              hover_name='country', size='counts')
     fig_map.update_layout(geo_scope="africa")
+    fig_map.update_geos(fitbounds="locations")
+    fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0})
     c1.plotly_chart(fig_map, use_container_width=True)
 
 ## Top 20 circulation variants chart
@@ -135,5 +136,3 @@ with st.container():
         x=1
     ), legend_title_text="Lineages", height=400)
     c2.plotly_chart(fig, use_container_width=True)
-
-# TODO: Set colors pallet from Houriyah - idea: gradient color for each variant
