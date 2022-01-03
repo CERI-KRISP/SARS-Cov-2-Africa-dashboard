@@ -109,11 +109,16 @@ df_map = df_map[['strain','virus','date','country','division','pangolin_africa',
 
 
 ## count strains per country
-count_variants = df_map.groupby(['country', 'division','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
+count_variants = df_map.groupby(['country','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
+coloured_options = ['A', 'B.1.1.7 (Alpha)', 'B.1.351 (Beta)', 'B.1.617.2/AY.x (Delta)', 'B.1.525 (Eta)', 'B.1.1.529 (Omicron)']
 with st.container():
-    fig_map = px.scatter_geo(count_variants,
-                             locations='sov_a3', color='pangolin_africa',
-                             hover_name='country', size='counts')
+    colour_by = c1.selectbox('Colour map by', coloured_options)
+    coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
+    fig_map = px.choropleth(coloured_map,
+                             locations='sov_a3', color='counts',
+                            labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes'},
+                            hover_name='country',
+                             hover_data =['pangolin_africa', 'counts'], color_continuous_scale="Reds")
     fig_map.update_layout(geo_scope="africa")
     fig_map.update_geos(fitbounds="locations")
     fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0})
