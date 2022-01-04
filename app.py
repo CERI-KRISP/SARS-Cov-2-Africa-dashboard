@@ -28,8 +28,12 @@ main_lineages_color_scheme = {'A': '#6c483a', 'A.23.1': '#9f8377', # more: https
                         'C.1/C.1.1/C.1.2': '#0D5789', 'C.16': '#3B98C6', 'C.36/C.36.3': '#3B98C6', #more: https://coolors.co/0d5789-3b98c6-edf6f9-ffddd2-e29578
                         'Other Lineages': '#FFFFFF'
                         }
+##### Dictionary to convert names of variants #####
+variant_names = {'B.1.1.7': 'B.1.1.7 (Alpha)', 'B.1.351': 'B.1.351 (Beta)',
+                 'B.1.617.2/AY.x': 'B.1.617.2/AY.x (Delta)', 'B.1.525': 'B.1.525 (Eta)',
+                 'B.1.1.529': 'B.1.1.529 (Omicron)'}
 
-# #Add sidebar to the app
+##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
 # st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
 st.sidebar.markdown(" ")
@@ -39,6 +43,7 @@ st.sidebar.subheader("Filter data ")
 
 df_africa = pd.read_csv(df_africa_path)
 df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
+df_africa.replace({'pangolin_lineage2': variant_names}, inplace=True)
 # # Date format
 # df_africa.date2 = df_africa.date2.str.replace('-', '/')
 # df_africa.date2 = pd.to_datetime(df_africa.date2)
@@ -143,7 +148,8 @@ with st.container():
         y=0.9,
         xanchor="right",
         x=1
-    ), legend_title_text="Lineages", height=400)
+    ), legend_title_text="Lineages", height=450)
+    fig.update_layout(title=dict(y=1))
     c2.plotly_chart(fig, use_container_width=True)
 
 df_country_lineages = df_africa.copy()
@@ -164,5 +170,6 @@ with st.container():
         y=1,
         xanchor="right",
         x=1
-    ), legend_title_text="Variants", height=400)
+    ), legend_title_text="Variants", height=800, )
+    country_lineages.update_layout(title=dict(y=1), yaxis={'categoryorder':'category descending'})
     c2.plotly_chart(country_lineages, use_container_width=True)
