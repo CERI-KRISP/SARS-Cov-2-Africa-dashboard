@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
      )
 
-#### INPUTS ######
+##### INPUTS ######
 df_africa_path = "./data/africa.csv"
 
 ##### Palette colors #####
@@ -35,6 +35,7 @@ variant_names = {'B.1.1.7': 'B.1.1.7 (Alpha)', 'B.1.351': 'B.1.351 (Beta)',
 
 ##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
+st.sidebar.subheader("Results Updated – 4 December 2021")
 # st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
 st.sidebar.markdown(" ")
 st.sidebar.subheader("Filter data ")
@@ -55,14 +56,16 @@ selection = st.sidebar.radio("Select Countries to show",("Show all countries", "
 
 if selection == "Show all countries":
     countries_selected = df_africa['country'].unique()
+    display_countries = "all countries in Africa continent"
 else:
     countries_selected = st.sidebar.multiselect('Which countries do you want to analyze?', countries, default='Morocco')
+    display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(countries_selected) > 2 else countries_selected)
 mask_countries = df_africa['country'].isin(countries_selected)
 df_africa = df_africa[mask_countries]
 
 #Building pangolin data frame
 pangolin_count = pd.DataFrame(df_africa.pangolin_lineage2)
-pangolin_count = pangolin_count.groupby(['pangolin_lineage2']).size().reset_index(name = 'Count').sort_values(['Count'], ascending=True)
+pangolin_count = pangolin_count.groupby(['pangolin_lineage2']).size().reset_index(name='Count').sort_values(['Count'], ascending=True)
 pangolin_count_top20 = pangolin_count.tail(20)
 pangolin_count_top20['pangolin_africa'] = pangolin_count_top20.pangolin_lineage2
 
@@ -100,32 +103,57 @@ st.sidebar.markdown("Contact email: tulio@sun.ac.za")
 #### End of sidebar
 
 # #Add title and subtitle to the main interface of the app
-st.title("SARS-COV-2 DASHBOARD")
-st.subheader("Results Updated – 4 December 2021")
+#st.title("SARS-COV-2 DASHBOARD")
+st.markdown("<h1 style='text-align: center; color: #FF7557;'>SARS-COV-2 AFRICA DASHBOARD</h1>", unsafe_allow_html=True)
+
+
+st.markdown("<h5 style='text-align: center;'>Showing results from %s </h5>" % display_countries, unsafe_allow_html=True)
 
 ### Layout of main page
 c1, c2 = st.columns((1.5, 2))
 
+############ First column ###############
 ############## MAP CHART ##############
 
 # Reading Africa map and joing with africa_df information
 gdf = gpd.read_file('data/africa.geojson')
 df_map = gdf.merge(df_africa1, left_on="sovereignt", right_on="country", how="outer")
 df_map = df_map[['strain','virus','date','country','division','pangolin_africa','Nextstrain_variants', 'sovereignt', 'sov_a3', 'geometry']]
+countries_codes = df_map[['country', 'sov_a3']]
+countries_codes.drop_duplicates(inplace=True)
 
+## count strains per country - by total
+count_variants = df_map.groupby(['country','pangolin_africa'], as_index=False).size().rename(columns={'size': 'counts'})
+count_variants = count_variants.merge(countries_codes, on='country', how='left')
 
-## count strains per country
-count_variants = df_map.groupby(['country','sov_a3', 'pangolin_africa']).size().reset_index(name='counts')
+## count strains per country - by percentage of each lineage in the country
+count_variants['percentage'] = 100 * count_variants['counts'] / count_variants.groupby('country')['counts'].transform('sum')
+
 coloured_options = ['A', 'B.1.1.7 (Alpha)', 'B.1.351 (Beta)', 'B.1.617.2/AY.x (Delta)', 'B.1.525 (Eta)', 'B.1.1.529 (Omicron)']
 with st.container():
-    colour_by = c1.selectbox('Colour map by', coloured_options)
+    #Radio selection for scale of data to show
+    map_scale = c1.radio("Select scale you want to show the data", ("Absolute", "Relative (%)"))
+    st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+    if map_scale == "Absolute":
+        map_count_column = 'counts'
+    else:
+        map_count_column = 'percentage'
+
+    #Lineage selection to color
+    colour_by = c1.selectbox('Colour map by', coloured_options, index=len(coloured_options)-1)
     coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
-    fig_map = px.choropleth(coloured_map,
-                             locations='sov_a3', color='counts',
-                            labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes'},
-                            hover_name='country',
-                             hover_data =['pangolin_africa', 'counts'], color_continuous_scale="Reds"
-                            )
+
+    if coloured_map[map_count_column].empty:
+        c1.write("No data to show for this lineage")
+        fig_map = px.line_geo(lat=[0,0,0,0], lon=[0,0,0,0])
+    else:
+        fig_map = px.choropleth(coloured_map,
+                                 locations='sov_a3', color=map_count_column,
+                                labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
+                                        'percentage': 'Total of Genomes (%)'},
+                                hover_name='country',
+                                 hover_data =['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds"
+                                )
     fig_map.update_layout(geo_scope="africa")
     # fig_map.update_geos(fitbounds="locations")
     fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
@@ -133,12 +161,13 @@ with st.container():
                           )
     c1.plotly_chart(fig_map, use_container_width=True)
 
-## Top 20 circulation variants chart
+############ Second column ###############
+####### TOP 20 CHART ###########
 with st.container():
     fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x',
                  color='pangolin_africa', color_discrete_map=main_lineages_color_scheme,
                  # color_discrete_sequence=px.colors.qualitative.Prism,
-                barmode='stack', title="Africa - Top 20 circulating lineages and variants",
+                barmode='stack', title="Top 20 circulating lineages and variants",
                  custom_data=['pangolin_africa', 'Count_x', 'date2'], labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
     fig.update_yaxes(title="Proportion of Genomes")
     fig.update_xaxes(title="Date")
@@ -152,6 +181,7 @@ with st.container():
     fig.update_layout(title=dict(y=1))
     c2.plotly_chart(fig, use_container_width=True)
 
+####### COUNTRIES WHITH SEQUENCE CHART #########
 df_country_lineages = df_africa.copy()
 variants = []
 for index, row in df_country_lineages.iterrows():
@@ -162,14 +192,14 @@ for index, row in df_country_lineages.iterrows():
 df_country_lineages['variant'] = variants
 with st.container():
     country_lineages = px.scatter(df_country_lineages, x="date", y="country", color="variant",
-                 title="Africa countries with sequence data", color_discrete_map=main_lineages_color_scheme)
-    country_lineages.update_traces(marker_size=10)
+                 title="Sequence data", color_discrete_map=main_lineages_color_scheme)
+    country_lineages.update_traces(marker = dict(size = 15, line=dict(width=0.5, color='#E5ECF6')))
     country_lineages.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
         y=1,
         xanchor="right",
         x=1
-    ), legend_title_text="Variants", height=800, )
+    ), legend_title_text="Variants")
     country_lineages.update_layout(title=dict(y=1), yaxis={'categoryorder':'category descending'})
     c2.plotly_chart(country_lineages, use_container_width=True)
