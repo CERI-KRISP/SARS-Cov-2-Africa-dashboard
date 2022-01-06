@@ -142,12 +142,12 @@ c1, c2 = st.columns((1.5, 2))
 # Reading Africa map and joing with africa_df information
 gdf = gpd.read_file('data/africa.geojson')
 df_map = gdf.merge(df_africa1, left_on="sovereignt", right_on="country", how="outer")
-df_map = df_map[['strain','virus','date','country','division','pangolin_africa','Nextstrain_variants', 'sovereignt', 'sov_a3', 'geometry']]
+df_map = df_map[['strain','virus','date', 'date2','country','division','pangolin_africa','Nextstrain_variants', 'sovereignt', 'sov_a3', 'geometry']]
 countries_codes = df_map[['country', 'sov_a3']]
 countries_codes.drop_duplicates(inplace=True)
 
 ## count strains per country - by total
-count_variants = df_map.groupby(['country','pangolin_africa'], as_index=False).size().rename(columns={'size': 'counts'})
+count_variants = df_map.groupby(['country','pangolin_africa', 'date2'], as_index=False).size().rename(columns={'size': 'counts'})
 count_variants = count_variants.merge(countries_codes, on='country', how='left')
 
 ## count strains per country - by percentage of each lineage in the country
@@ -174,9 +174,10 @@ with st.container():
         fig_map = px.choropleth(coloured_map,
                                  locations='sov_a3', color=map_count_column,
                                 labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
-                                        'percentage': 'Total of Genomes (%)'},
+                                        'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
                                 hover_name='country',
                                  hover_data =['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds",
+                                animation_frame='date2'
                                 )
     fig_map.update_layout(geo_scope="africa")
     # fig_map.update_geos(fitbounds="locations")
