@@ -33,6 +33,20 @@ variant_names = {'B.1.1.7': 'B.1.1.7 (Alpha)', 'B.1.351': 'B.1.351 (Beta)',
                  'B.1.617.2/AY.x': 'B.1.617.2/AY.x (Delta)', 'B.1.525': 'B.1.525 (Eta)',
                  'B.1.1.529': 'B.1.1.529 (Omicron)'}
 
+###### Dictionary to select countries per region ####
+countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African Republic', 'Republic of Chad',
+                                        'Republic of Congo', 'Democratic Republic of Congo',
+                                        'Republic of Equatorial Guinea', 'Gabonese Republic', 'São Tomé and Principe'},
+                     'Eastern Africa': {'Comoros', 'Djibouti', 'State of Eritrea', 'Ethiopia', 'Kenya', 'Madagascar',
+                                        'Mauritius', 'Rwanda', 'Seychelles', 'Somalia', 'Sudan', 'South Sudan', 'Tanzania',
+                                        'Uganda'},
+                     'Northern Africa': {'Algeria', 'Egypt', 'Libya', 'Mauritania', 'Morocco', 'Sahrawi', 'Tunisia'},
+                     'Southern Africa': {'Angola', 'Botswana', 'Eswatini', 'Lesotho', 'Malawi', 'Mozambique', 'Namibia',
+                                         'South Africa', 'Zambia', 'Zimbabwe'},
+                     'Western Africa': {'Benin', 'Faso', 'Cabo Verde', 'Côte d\'Ivoire', 'Gambia', 'Ghana', 'Guinea',
+                                        'Guinea Bissau', 'Liberia', 'Mali', 'Niger', 'Nigeria', 'Senegal', 'Sierra Leone',
+                                        'Togolese'}}
+
 ##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
 st.sidebar.subheader("Results Updated – 4 December 2021")
@@ -52,13 +66,23 @@ df_africa.replace({'pangolin_lineage2': variant_names}, inplace=True)
 
 # Filter by selected country
 countries = df_africa['country'].unique()
-selection = st.sidebar.radio("Select Countries to show",("Show all countries", "Select one or more countries"))
+selection = st.sidebar.radio("Select Countries to show",("Show all countries", "Select region",
+                                                         "Select one or more countries"))
 
 if selection == "Show all countries":
     countries_selected = df_africa['country'].unique()
     display_countries = "all countries in Africa continent"
+elif selection == "Select region":
+    aux_countries = []
+    countries_selected = st.sidebar.multiselect('What region do you want to analyze?', countries_regions.keys(),
+                                                default='Northern Africa')
+    display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
+        countries_selected) > 2 else countries_selected)
+    for key in countries_selected:
+        aux_countries.extend(countries_regions[key])
+    countries_selected = aux_countries
 else:
-    countries_selected = st.sidebar.multiselect('Which countries do you want to analyze?', countries, default='Morocco')
+    countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries, default='Morocco')
     display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(countries_selected) > 2 else countries_selected)
 mask_countries = df_africa['country'].isin(countries_selected)
 df_africa = df_africa[mask_countries]
