@@ -103,7 +103,7 @@ df_africa = df_africa[mask_lineages]
 # TODO: Filter by Period
 
 # start_date, end_date = st.sidebar.select_slider("Select a range of time to show", options=df_africa['date2'].unique(),
-#                                                 value=(df_africa['date2'].min(), df_africa['date2'].max()))
+#                                                  value=(df_africa['date2'].min(), df_africa['date2'].max()))
 # st.sidebar.write('Starts from', start_date, 'to', end_date)
 #
 # df_africa = df_africa.loc[(df_africa['date2'] >= start_date) & (df_africa['date2'] <= end_date)]
@@ -168,7 +168,7 @@ with st.container():
     coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
 
     if coloured_map[map_count_column].empty:
-        c1.write("No data to show for this lineage")
+        c1.warning("No data to show for this lineage.")
         fig_map = px.line_geo(lat=[0,0,0,0], lon=[0,0,0,0])
     else:
         fig_map = px.choropleth(coloured_map,
@@ -176,7 +176,7 @@ with st.container():
                                 labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
                                         'percentage': 'Total of Genomes (%)'},
                                 hover_name='country',
-                                 hover_data =['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds"
+                                 hover_data =['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds",
                                 )
     fig_map.update_layout(geo_scope="africa")
     # fig_map.update_geos(fitbounds="locations")
@@ -194,7 +194,7 @@ with st.container():
                 barmode='stack', title="Top 20 circulating lineages and variants",
                  custom_data=['pangolin_africa', 'Count_x', 'date2'], labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
     fig.update_yaxes(title="Proportion of Genomes")
-    fig.update_xaxes(title="Date")
+    fig.update_xaxes(title="Date", range=[variants_percentage['date2'].min(), datetime.today()])
     fig.update_layout(legend=dict(
         orientation="h",
         yanchor="bottom",
