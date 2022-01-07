@@ -135,7 +135,7 @@ st.markdown("<h1 style='text-align: center; color: #FF7557;'>SARS-COV-2 AFRICA D
 st.markdown("<h5 style='text-align: center;'>Showing results from %s </h5>" % display_countries, unsafe_allow_html=True)
 
 ### Layout of main page
-c1, c2 = st.columns((1.5, 2))
+c1, c2 = st.columns((1.5, 1.9))
 
 ############ First column ###############
 ############## MAP CHART ##############
