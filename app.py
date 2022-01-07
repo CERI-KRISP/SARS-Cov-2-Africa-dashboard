@@ -1,4 +1,5 @@
 #Import Python Libraries
+import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -49,7 +50,7 @@ countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African 
 
 ##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
-st.sidebar.subheader("Results Updated – 4 December 2021")
+st.sidebar.subheader("Results Updated – 30 December 2021")
 # st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
 st.sidebar.markdown(" ")
 st.sidebar.subheader("Filter data ")
@@ -143,6 +144,13 @@ c1, c2 = st.columns((1.5, 2))
 gdf = gpd.read_file('data/africa.geojson')
 df_map = gdf.merge(df_africa1, left_on="sovereignt", right_on="country", how="outer")
 df_map = df_map[['strain','virus','date', 'date2','country','division','pangolin_africa','Nextstrain_variants', 'sovereignt', 'sov_a3', 'geometry']]
+
+df_map['date'] = pd.to_datetime(df_map['date'], format='%Y-%m-%d', yearfirst=True)
+initial_date = df_map['date'].min()
+initial_date = initial_date.strftime('%Y-%m-%d')
+final_date = df_map['date'].max()
+final_date = final_date.strftime('%Y-%m-%d')
+
 countries_codes = df_map[['country', 'sov_a3']]
 countries_codes.drop_duplicates(inplace=True)
 
@@ -166,6 +174,14 @@ with st.container():
     #Lineage selection to color
     colour_by = c1.selectbox('Colour map by', coloured_options, index=len(coloured_options)-1)
     coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
+
+    #Building synthetic data to set initial and end date for dataframe
+    synthetic_data = []
+    for index, row in coloured_map.groupby('country')[['pangolin_africa', 'sov_a3']].agg('first').reset_index().iterrows():
+        synthetic_data.append([row['country'], row['pangolin_africa'], initial_date, np.NAN, row['sov_a3'], np.NAN])
+        synthetic_data.append([row['country'], row['pangolin_africa'], final_date, np.NAN, row['sov_a3'], np.NAN])
+    synthetic_data = pd.DataFrame(synthetic_data, columns=['country', 'pangolin_africa', 'date2', 'counts', 'sov_a3', 'percentage'])
+    coloured_map = coloured_map.append(synthetic_data).sort_values(by=['date2'])
 
     if coloured_map[map_count_column].empty:
         c1.warning("No data to show for this lineage.")
