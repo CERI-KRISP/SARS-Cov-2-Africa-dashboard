@@ -37,6 +37,9 @@ variant_names = {'B.1.1.7': 'B.1.1.7 (Alpha)', 'B.1.351': 'B.1.351 (Beta)',
                  'B.1.617.2/AY.x': 'B.1.617.2/AY.x (Delta)', 'B.1.525': 'B.1.525 (Eta)',
                  'B.1.1.529': 'B.1.1.529 (Omicron)'}
 
+concerned_variants = ['A', 'B.1.1.7 (Alpha)', 'B.1.351 (Beta)', 'B.1.617.2/AY.x (Delta)', 'B.1.525 (Eta)',
+                    'B.1.1.529 (Omicron)']
+
 ###### Dictionary to select countries per region ####
 countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African Republic', 'Republic of Chad',
                                         'Republic of Congo', 'Democratic Republic of Congo',
@@ -52,6 +55,16 @@ countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African 
                                         'Guinea Bissau', 'Liberia', 'Mali', 'Niger', 'Nigeria', 'Senegal',
                                         'Sierra Leone',
                                         'Togolese'}}
+### FUNCTIONS #######
+
+def lineages_to_concerned_variantes(df, variant_column):
+    var = []
+    for index, row in df.iterrows():
+        if row[variant_column] in concerned_variants:
+            var.append(row[variant_column])
+        else:
+            var.append('Other Lineages')
+    return var
 
 ##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
@@ -171,8 +184,6 @@ count_variants = count_variants.merge(countries_codes, on='country', how='left')
 count_variants['percentage'] = 100 * count_variants['counts'] / count_variants.groupby('country')['counts'].transform(
     'sum')
 
-coloured_options = ['A', 'B.1.1.7 (Alpha)', 'B.1.351 (Beta)', 'B.1.617.2/AY.x (Delta)', 'B.1.525 (Eta)',
-                    'B.1.1.529 (Omicron)']
 with st.container():
     # Radio selection for scale of data to show
     map_scale = c1.radio("Select scale you want to show the data", ("Absolute", "Relative (%)"))
@@ -183,8 +194,9 @@ with st.container():
         map_count_column = 'percentage'
 
     # Lineage selection to color
-    colour_by = c1.selectbox('Colour map by', coloured_options, index=len(coloured_options) - 1)
-    coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
+    # colour_by = c1.selectbox('Colour map by', concerned_variants, index=len(concerned_variants) - 1)
+    # coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
+    coloured_map = count_variants
 
     # Building synthetic data to set initial and end date for dataframe
     synthetic_data = []
@@ -222,13 +234,32 @@ with st.container():
                                         'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
                                 hover_name='country',
                                 hover_data=['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds",
-                                animation_frame='date2'
+                                # animation_frame='date2'
                                 )
     fig_map.update_layout(geo_scope="africa")
     # fig_map.update_geos(fitbounds="locations")
     fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
                           legend=dict(orientation='h')
                           )
+    # Plot bubbles for each variant and each country by period
+    coloured_map['variants'] = lineages_to_concerned_variantes(coloured_map, 'pangolin_africa')
+    for i in coloured_map['variants'].unique():
+        mask = coloured_map['variants'] == i
+        df_variant = coloured_map[mask]
+        df_variant.sort_values(by='counts', inplace=True, ascending=True)
+        # c1.write(df_variant)
+        fig_map.add_trace(go.Scattergeo(locations=coloured_map['sov_a3'],
+                                        text=df_variant[['variants', 'counts']],
+                                        name=i,
+                                        mode='markers',
+                                        marker=dict(
+                                            size=df_variant['counts'],
+                                            color=main_lineages_color_scheme.get(i),
+                                            line_width=5,
+                                            sizeref=1,
+                                            sizemode="area",
+                                            reversescale=True
+                                        )))
     c1.plotly_chart(fig_map, use_container_width=True)
 
 ############ Second column ###############
@@ -254,13 +285,8 @@ with st.container():
 
 ####### COUNTRIES WHITH SEQUENCE CHART #########
 df_country_lineages = df_africa.copy()
-variants = []
-for index, row in df_country_lineages.iterrows():
-    if row['pangolin_lineage2'] in coloured_options:
-        variants.append(row['pangolin_lineage2'])
-    else:
-        variants.append('Other Lineages')
-df_country_lineages['variant'] = variants
+df_country_lineages['variant'] = lineages_to_concerned_variantes(df_country_lineages, 'pangolin_lineage2')
+
 with st.container():
     country_lineages = px.scatter(df_country_lineages, x="date", y="country", color="variant",
                                   title="Sequence data", color_discrete_map=main_lineages_color_scheme)
