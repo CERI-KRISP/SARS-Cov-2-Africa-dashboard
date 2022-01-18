@@ -1,12 +1,13 @@
 # Import Python Libraries
 import numpy as np
 import pandas as pd
-import streamlit as st
 import plotly.express as px
 import geopandas as gpd
-import plotly.graph_objects as go
-
 from datetime import date, datetime
+
+# Import project packages
+from utils.dicts import *
+from utils.functions import *
 
 ## Page config
 st.set_page_config(
@@ -17,67 +18,18 @@ st.set_page_config(
 
 ##### INPUTS ######
 df_africa_path = "./data/africa.csv"
-
-##### Palette colors #####
-main_lineages_color_scheme = {'A': '#6c483a', 'A.23.1': '#9f8377',
-                              # more: https://coolors.co/6c483a-9f8377-aea198-b9b8ae-cdcfc8
-                              'B.1': '#586f6b', 'B.1.1': '#7f9183', 'B.1.1.1': '#b8b8aa', 'B.1.1.318/AZ.x': '#cfc0bd',
-                              'B.1.16': '#DDD5D0',
-                              'B.1.1.448': '#d4baca', 'B.1.1.54': '#e69ac8', 'B.1.1.529 (Omicron)': '#e83368',  # pink
-                              'B.1.1.7 (Alpha)': '#696969',  # more: https://coolors.co/696969-c9c9c9 grey
-                              'B.1.237': '#faf0ca', 'B.1.351 (Beta)': '#ffe45e', 'B.1.351': '#ffe45e',  # yellow
-                              'B.1.525 (Eta)': '#cdb4db', 'B.1.540': '#c7e8f3', 'B.1.549': '#FFDDD2',
-                              'B.1.617.2/AY.x (Delta)': '#2a9d8f',
-                              'C.1/C.1.1/C.1.2': '#0D5789', 'C.16': '#3B98C6', 'C.36/C.36.3': '#3B98C6',
-                              # more: https://coolors.co/0d5789-3b98c6-edf6f9-ffddd2-e29578
-                              'Other Lineages': '#FFFFFF'
-                              }
-##### Dictionary to convert names of variants #####
-variant_names = {'B.1.1.7': 'B.1.1.7 (Alpha)', 'B.1.351': 'B.1.351 (Beta)',
-                 'B.1.617.2/AY.x': 'B.1.617.2/AY.x (Delta)', 'B.1.525': 'B.1.525 (Eta)',
-                 'B.1.1.529': 'B.1.1.529 (Omicron)'}
-
-concerned_variants = ['A', 'B.1.1.7 (Alpha)', 'B.1.351 (Beta)', 'B.1.617.2/AY.x (Delta)', 'B.1.525 (Eta)',
-                    'B.1.1.529 (Omicron)']
-
-###### Dictionary to select countries per region ####
-countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African Republic', 'Republic of Chad',
-                                        'Republic of Congo', 'Democratic Republic of Congo',
-                                        'Republic of Equatorial Guinea', 'Gabonese Republic', 'São Tomé and Principe'},
-                     'Eastern Africa': {'Comoros', 'Djibouti', 'State of Eritrea', 'Ethiopia', 'Kenya', 'Madagascar',
-                                        'Mauritius', 'Rwanda', 'Seychelles', 'Somalia', 'Sudan', 'South Sudan',
-                                        'Tanzania',
-                                        'Uganda'},
-                     'Northern Africa': {'Algeria', 'Egypt', 'Libya', 'Mauritania', 'Morocco', 'Sahrawi', 'Tunisia'},
-                     'Southern Africa': {'Angola', 'Botswana', 'Eswatini', 'Lesotho', 'Malawi', 'Mozambique', 'Namibia',
-                                         'South Africa', 'Zambia', 'Zimbabwe'},
-                     'Western Africa': {'Benin', 'Faso', 'Cabo Verde', 'Côte d\'Ivoire', 'Gambia', 'Ghana', 'Guinea',
-                                        'Guinea Bissau', 'Liberia', 'Mali', 'Niger', 'Nigeria', 'Senegal',
-                                        'Sierra Leone',
-                                        'Togolese'}}
-### FUNCTIONS #######
-
-def lineages_to_concerned_variantes(df, variant_column):
-    var = []
-    for index, row in df.iterrows():
-        if row[variant_column] in concerned_variants:
-            var.append(row[variant_column])
-        else:
-            var.append('Other Lineages')
-    return var
+df_africa = pd.read_csv(df_africa_path)
+df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
+df_africa.replace({'pangolin_lineage2': variant_names}, inplace=True)
+last_update = "30 December 2021"
 
 ##Add sidebar to the app
 st.sidebar.title("GENOMICS AFRICA")
-st.sidebar.subheader("Results Updated – 30 December 2021")
+st.sidebar.subheader("Results Updated – %s" % last_update)
 # st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
 st.sidebar.markdown(" ")
 st.sidebar.subheader("Filter data ")
 
-# Data preparation to only retrieve fields that are relevant to this project
-
-df_africa = pd.read_csv(df_africa_path)
-df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
-df_africa.replace({'pangolin_lineage2': variant_names}, inplace=True)
 # # Date format
 # df_africa.date2 = df_africa.date2.str.replace('-', '/')
 # df_africa.date2 = pd.to_datetime(df_africa.date2)
@@ -148,7 +100,6 @@ st.sidebar.markdown("Contact email: tulio@sun.ac.za")
 #### End of sidebar
 
 # #Add title and subtitle to the main interface of the app
-# st.title("SARS-COV-2 DASHBOARD")
 st.markdown("<h1 style='text-align: center; color: #FF7557;'>SARS-COV-2 AFRICA DASHBOARD</h1>", unsafe_allow_html=True)
 
 st.markdown("<h5 style='text-align: center;'>Showing results from %s </h5>" % display_countries, unsafe_allow_html=True)
@@ -186,12 +137,14 @@ count_variants['percentage'] = 100 * count_variants['counts'] / count_variants.g
 
 with st.container():
     # Radio selection for scale of data to show
-    map_scale = c1.radio("Select scale you want to show the data", ("Absolute", "Relative (%)"))
-    st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-    if map_scale == "Absolute":
-        map_count_column = 'counts'
-    else:
-        map_count_column = 'percentage'
+    # COLORPATH SELECTION
+    # map_scale = c1.radio("Select scale you want to show the data", ("Absolute", "Relative (%)"))
+    # st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
+    # if map_scale == "Absolute":
+    #     map_count_column = 'counts'
+    # else:
+    #     map_count_column = 'percentage'
+    map_count_column = 'percentage'
 
     # Lineage selection to color
     # colour_by = c1.selectbox('Colour map by', concerned_variants, index=len(concerned_variants) - 1)
@@ -208,10 +161,26 @@ with st.container():
                                   columns=['country', 'pangolin_africa', 'date2', 'counts', 'sov_a3', 'percentage'])
     coloured_map = coloured_map.append(synthetic_data).sort_values(by=['date2'])
 
+    # Setting up latitude and longitude columns
+    # longitude = []
+    # latitude = []
+    # for i in coloured_map['country']:
+    #     if findGeocode(i) != None:
+    #         loc = findGeocode(i)
+    #         latitude.append(loc.latitude)
+    #         longitude.append(loc.longitude)
+    #     else:
+    #         latitude.append(np.nan)
+    #         longitude.append(np.nan)
+    #
+    # coloured_map["lat"] = latitude
+    # coloured_map["long"] = longitude
+    #c1.write(coloured_map.head())
+
     # Filling NA values
     counts = []
     min_country_dates = coloured_map.groupby('country').agg({'date2': 'min'}).reset_index()
-    c1.write()
+
     for index, row in coloured_map.iterrows():
         min_date = min_country_dates['date2'].loc[min_country_dates['country'] == row['country']].min()
         if (row['date2'] == min_date) and np.isnan(row['counts']) == True:
@@ -228,38 +197,30 @@ with st.container():
         fig_map = px.line_geo(lat=[0, 0, 0, 0], lon=[0, 0, 0, 0])
     else:
         # c1.write(coloured_map)
-        fig_map = px.choropleth(coloured_map,
-                                locations='sov_a3', color=map_count_column,
-                                labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
-                                        'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
-                                hover_name='country',
-                                hover_data=['pangolin_africa', 'counts', 'percentage'], color_continuous_scale="Reds",
-                                # animation_frame='date2'
-                                )
-    fig_map.update_layout(geo_scope="africa")
-    # fig_map.update_geos(fitbounds="locations")
-    fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                          legend=dict(orientation='h')
-                          )
-    # Plot bubbles for each variant and each country by period
-    coloured_map['variants'] = lineages_to_concerned_variantes(coloured_map, 'pangolin_africa')
-    for i in coloured_map['variants'].unique():
-        mask = coloured_map['variants'] == i
-        df_variant = coloured_map[mask]
-        df_variant.sort_values(by='counts', inplace=True, ascending=True)
-        # c1.write(df_variant)
-        fig_map.add_trace(go.Scattergeo(locations=coloured_map['sov_a3'],
-                                        text=df_variant[['variants', 'counts']],
-                                        name=i,
-                                        mode='markers',
-                                        marker=dict(
-                                            size=df_variant['counts'],
-                                            color=main_lineages_color_scheme.get(i),
+        coloured_map['variants'] = lineages_to_concerned_variantes(coloured_map, 'pangolin_africa')
+        fig_map = px.scatter_geo(coloured_map, locations='sov_a3', hover_name='country',
+                                 hover_data=['pangolin_africa', 'counts', 'percentage'],
+                                 labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
+                                         'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
+                                 animation_frame="date2", size='counts', animation_group='country',
+                                 color='variants', size_max=100,
+                                 color_discrete_map=main_lineages_color_scheme, title="Genomes per lineage")
+        fig_map.update_traces(marker=dict(
+                                            size=coloured_map['counts'],
                                             line_width=5,
                                             sizeref=1,
                                             sizemode="area",
-                                            reversescale=True
-                                        )))
+                                            reversescale=True,
+                                            line=dict(width=3,
+                                                      color='rgba(68, 68, 68, 0)')))
+        fig_map.update_layout(geo_scope='africa')
+        fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
+                              legend=dict(orientation='h'))
+        fig_map.update_layout(title_y=1)
+        last_frame_num = int(len(fig_map.frames) - 1)
+        fig_map.layout['sliders'][0]['active'] = last_frame_num
+
+    fig_map.update_layout(showlegend=True)
     c1.plotly_chart(fig_map, use_container_width=True)
 
 ############ Second column ###############

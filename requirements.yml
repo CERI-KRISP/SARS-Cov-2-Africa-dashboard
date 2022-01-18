@@ -8,3 +8,4 @@ dependencies:
   - pandas
   - xlrd=1.2.0
   - geopandas
+  - geopy=2.2.0
