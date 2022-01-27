@@ -69,15 +69,23 @@ pangolin_count_top20 = pangolin_count.tail(20)
 pangolin_count_top20['pangolin_africa'] = pangolin_count_top20.pangolin_lineage2
 
 # Filter by Lineages
-lineages_selected = st.sidebar.multiselect('Select variants/lineages to show', pangolin_count_top20['pangolin_africa'],
-                                           default=pangolin_count_top20['pangolin_africa'])
+st.sidebar.write("Select variants/lineages to show")
+voc_selected = st.sidebar.checkbox("Show VOCs")
+lineages = pangolin_count_top20['pangolin_africa']
+if voc_selected:
+    lineages = pd.Series(concerned_variants)
+else:
+    lineages = pangolin_count_top20['pangolin_africa']
+lineages_selected = st.sidebar.multiselect('', lineages, default=lineages)
 mask_lineages = df_africa['pangolin_lineage2'].isin(lineages_selected)
 df_africa = df_africa[mask_lineages]
 
 # TODO: Filter by Period
-
+# df_africa.dropna(subset=['date', 'date2'], inplace=True)
+# df_africa['date2'] = df_africa['date2'].sort_values(ascending=True)
+# # st.write(df_africa['date2'].unique())
 # start_date, end_date = st.sidebar.select_slider("Select a range of time to show", options=df_africa['date2'].unique(),
-#                                                  value=(df_africa['date2'].min(), df_africa['date2'].max()))
+#                                                  value=(df_africa['date2'][0], df_africa['date2'][48]))
 # st.sidebar.write('Starts from', start_date, 'to', end_date)
 #
 # df_africa = df_africa.loc[(df_africa['date2'] >= start_date) & (df_africa['date2'] <= end_date)]
@@ -110,7 +118,7 @@ st.markdown("<h5 style='text-align: center;'>Showing results from %s </h5>" % di
 c1, c2 = st.columns((1.5, 1.9))
 
 ############ First column ###############
-############## MAP CHART ##############
+############## MAP CHART ################
 
 # Reading Africa map and joing with africa_df information
 gdf = gpd.read_file('data/africa.geojson')
@@ -227,7 +235,6 @@ with st.container():
         fig_map.update_layout(title_y=1)
         last_frame_num = int(len(fig_map.frames) - 1)
         fig_map.layout['sliders'][0]['active'] = last_frame_num
-
     fig_map.update_layout(showlegend=False)
     c1.plotly_chart(fig_map, use_container_width=True)
 
