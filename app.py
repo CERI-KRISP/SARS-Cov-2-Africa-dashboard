@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import geopandas as gpd
 from datetime import date, datetime
+from PIL import Image
 
 # Import project packages
 from utils.dicts import *
@@ -235,7 +236,7 @@ with st.container():
         fig_map.update_layout(title_y=1)
         last_frame_num = int(len(fig_map.frames) - 1)
         fig_map.layout['sliders'][0]['active'] = last_frame_num
-    fig_map.update_layout(showlegend=False)
+        fig_map.update_layout(showlegend=False)
     c1.plotly_chart(fig_map, use_container_width=True)
 
 ############ Second column ###############
@@ -276,3 +277,72 @@ with st.container():
     ), legend_title_text="Variants")
     country_lineages.update_layout(title=dict(y=1), yaxis={'categoryorder': 'category descending'})
     c2.plotly_chart(country_lineages, use_container_width=True)
+
+########### TABLE WEEKLY VARIANT SUMMARY #########
+weekly_variants_df = pd.read_excel("data/Africa_weekly_variant_summary.xlsx")
+with st.container():
+    with st.expander("Africa weekly variant summary"):
+        st.table(weekly_variants_df)
+st.header("Variant details")
+
+c1_2, c2_2 = st.columns((1, 1))
+with c1_2.container():
+    with c1_2.expander("Alpha variant"):
+        sarscov2_reference_img = Image.open("data/figures/SARS_Cov2_reference_sequence.png")
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        alpha_img = Image.open("data/figures/alpha-stanford-3-1536x226.png")
+        st.image(alpha_img, caption="SARS_CoV2 Alpha variant sequence")
+
+with c2_2.container():
+    with c2_2.expander("Beta variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        beta_img = Image.open("data/figures/Beta-stanford.png")
+        st.image(beta_img, caption="SARS_CoV2 Beta variant sequence")
+
+with c1_2.container():
+    with c1_2.expander("Delta variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        delta_img = Image.open("data/figures/Delta-stanford.png")
+        st.image(delta_img, caption="SARS_CoV2 Delta variant sequence")
+
+with c2_2.container():
+    with c2_2.expander("Omicron variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        omicron_img = Image.open("data/figures/omicron-stanford.png")
+        st.image(omicron_img, caption="SARS_CoV2 Omicron variant sequence")
+
+with c1_2.container():
+    with c1_2.expander("A.23.1 variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        a231_img = Image.open("data/figures/a231-stanford.png")
+        st.image(a231_img, caption="SARS_CoV2 A.23.1 variant sequence")
+
+with c2_2.container():
+    with c2_2.expander("B.1.1.318 variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        b11318_img = Image.open("data/figures/b11318-stanford.png")
+        st.image(b11318_img, caption="SARS_CoV2 B.1.1.318 variant sequence")
+
+with c1_2.container():
+    with c1_2.expander("C.1 variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        c1_img = Image.open("data/figures/c1-stanford.png")
+        st.image(c1_img, caption="SARS_CoV2 C.1 variant sequence")
+
+with c2_2.container():
+    with c2_2.expander("C.1.2 variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        c12_img = Image.open("data/figures/c12-stanford.png")
+        st.image(c12_img, caption="SARS_CoV2 C.1.2 variant sequence")
+
+with c1_2.container():
+    with c1_2.expander("C.36.3 variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        c363_img = Image.open("data/figures/c.36.3-stanford.png")
+        st.image(c363_img, caption="SARS_CoV2 C.36.3 variant sequence")
+
+with c2_2.container():
+    with c2_2.expander("Eta variant"):
+        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
+        eta_img = Image.open("data/figures/Eta-stanford.png")
+        st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
