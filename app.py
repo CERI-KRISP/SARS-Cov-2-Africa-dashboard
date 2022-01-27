@@ -279,7 +279,7 @@ with st.container():
     c2.plotly_chart(country_lineages, use_container_width=True)
 
 ########### TABLE WEEKLY VARIANT SUMMARY #########
-weekly_variants_df = pd.read_excel("data/Africa_weekly_variant_summary.xlsx")
+weekly_variants_df = pd.read_csv("data/Africa_weekly_variant_summary.csv")
 with st.container():
     with st.expander("Africa weekly variant summary"):
         st.table(weekly_variants_df)
