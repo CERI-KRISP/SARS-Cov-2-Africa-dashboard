@@ -71,7 +71,7 @@ pangolin_count_top20['pangolin_africa'] = pangolin_count_top20.pangolin_lineage2
 
 # Filter by Lineages
 st.sidebar.write("Select variants/lineages to show")
-voc_selected = st.sidebar.checkbox("Show VOCs")
+voc_selected = st.sidebar.checkbox("Show Variants of Concern (VOCs)")
 lineages = pangolin_count_top20['pangolin_africa']
 if voc_selected:
     lineages = pd.Series(concerned_variants)
@@ -234,7 +234,7 @@ with st.container():
         fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
                               legend=dict(orientation='h'))
         fig_map.update_layout(title_y=1)
-        last_frame_num = int(len(fig_map.frames) - 1)
+        last_frame_num = int(len(fig_map.frames) - 2)
         fig_map.layout['sliders'][0]['active'] = last_frame_num
         fig_map.update_layout(showlegend=False)
     c1.plotly_chart(fig_map, use_container_width=True)
@@ -279,11 +279,11 @@ with st.container():
     c2.plotly_chart(country_lineages, use_container_width=True)
 
 ########### TABLE WEEKLY VARIANT SUMMARY #########
+st.header("Variant details")
 weekly_variants_df = pd.read_csv("data/Africa_weekly_variant_summary.csv")
 with st.container():
     with st.expander("Africa weekly variant summary"):
         st.table(weekly_variants_df)
-st.header("Variant details")
 
 c1_2, c2_2 = st.columns((1, 1))
 with c1_2.container():
