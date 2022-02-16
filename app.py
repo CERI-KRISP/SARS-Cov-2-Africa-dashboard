@@ -16,7 +16,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
+hide_menu = """
+<style>
+#MainMenu {
+    visibility:hidden;
+    }
+footer{
+    visibility:visible;
+    }
+footer:after{
+    content: ' using GISAID data.'
+</style>
+"""
+st.markdown(hide_menu, unsafe_allow_html=True)
 remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
 ##### INPUTS ######
@@ -71,13 +83,18 @@ pangolin_count_top20['pangolin_africa'] = pangolin_count_top20.pangolin_lineage2
 
 # Filter by Lineages
 st.sidebar.write("Select variants/lineages to show")
-voc_selected = st.sidebar.checkbox("Show Variants of Concern (VOCs)")
-lineages = pangolin_count_top20['pangolin_africa']
-if voc_selected:
-    lineages = pd.Series(concerned_variants)
-else:
-    lineages = pangolin_count_top20['pangolin_africa']
-lineages_selected = st.sidebar.multiselect('', lineages, default=lineages)
+#voc_selected = st.sidebar.checkbox("Show Variants of Concern (VOCs)")
+# lineages = pangolin_count_top20['pangolin_africa']
+# if voc_selected:
+#     lineages = pd.Series(concerned_variants)
+# else:
+#     lineages = pangolin_count_top20['pangolin_africa']
+
+### Change pangolin names to use "other lineages" for all lineages that is not VOC
+variantes = lineages_to_concerned_variantes(df_africa,'pangolin_lineage2')
+df_africa['pangolin_lineage2'] = variantes
+
+lineages_selected = st.sidebar.multiselect('', df_africa['pangolin_lineage2'].unique(), default=df_africa['pangolin_lineage2'].unique())
 mask_lineages = df_africa['pangolin_lineage2'].isin(lineages_selected)
 df_africa = df_africa[mask_lineages]
 
@@ -241,11 +258,12 @@ with st.container():
 
 ############ Second column ###############
 ####### TOP 20 CHART ###########
+#TODO consertar esse gráfico pra calcular porcentagem para todas as variantes
 with st.container():
     fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x',
                  color='pangolin_africa', color_discrete_map=main_lineages_color_scheme,
                  # color_discrete_sequence=px.colors.qualitative.Prism,
-                 barmode='stack', title="Top 20 circulating lineages and variants",
+                 barmode='stack', title="Circulating lineages and variants",
                  custom_data=['pangolin_africa', 'Count_x', 'date2'],
                  labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
     fig.update_yaxes(title="Proportion of Genomes")
@@ -346,3 +364,6 @@ with c2_2.container():
         st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
         eta_img = Image.open("data/figures/Eta-stanford.png")
         st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
+
+st.sidebar.markdown("Acknowledgment:")
+st.sidebar.image("img/gisaid_logo.png")
