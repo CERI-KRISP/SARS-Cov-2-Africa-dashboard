@@ -1,369 +1,140 @@
+# Import project packages
+
+from config import *
+from source.pages.sidebar import *
+from source.pages.header import *
+from source.graphs.africa_map import *
+from source.graphs.variants_proportion import variants_bar_plot
+from source.graphs.countries_sequences import countries_with_sequences_chart
+
 # Import Python Libraries
-import numpy as np
 import pandas as pd
-import plotly.express as px
-import geopandas as gpd
-from datetime import date, datetime
 from PIL import Image
 
-# Import project packages
-from utils.dicts import *
-from utils.functions import *
 
-## Page config
-st.set_page_config(
-    page_title="SARS-COV-2 Dashboard - Genomics Africa ",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-hide_menu = """
-<style>
-#MainMenu {
-    visibility:hidden;
-    }
-footer{
-    visibility:visible;
-    }
-footer:after{
-    content: ' using GISAID data.'
-</style>
-"""
-st.markdown(hide_menu, unsafe_allow_html=True)
-remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
+def main():
+    st.set_page_config(
+        page_title="SARS-COV-2 Dashboard - Genomics Africa ",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
-##### INPUTS ######
-df_africa_path = "./data/africa.csv"
-df_africa = pd.read_csv(df_africa_path)
-df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
-df_africa.replace({'pangolin_lineage2': variant_names}, inplace=True)
-last_update = "30 December 2021"
+    st.markdown(css_changes, unsafe_allow_html=True)
+    remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
-##Add sidebar to the app
-st.sidebar.title("GENOMICS AFRICA")
-st.sidebar.subheader("Results Updated – %s" % last_update)
-# st.sidebar.markdown("#### Accelerating genomics surveillance for COVID-19 response in Africa. A program of CERI and partners in colaboration with Rockefeller Foundation")
-st.sidebar.markdown(" ")
-st.sidebar.subheader("Filter data ")
+    ##### INPUTS ######
+    df_africa_path = "./data/africa.csv"
+    df_africa = pd.read_csv(df_africa_path)
+    df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
 
-# # Date format
-# df_africa.date2 = df_africa.date2.str.replace('-', '/')
-# df_africa.date2 = pd.to_datetime(df_africa.date2)
-# df_africa.date2 = df_africa['date2'].dt.strftime("%Y/%m/%d")
+    # Add variant name columns
+    df_africa['variant'] = df_africa['pangolin_lineage2']
+    df_africa.replace({"variant": variant_names}, inplace=True)
+    df_africa['variant'] = lineages_to_concerned_variants(df_africa, 'variant')
+    last_update = "17 February 2022"
 
-# Filter by selected country
-countries = df_africa['country'].unique()
-selection = st.sidebar.radio("Select Countries to show", ("Show all countries", "Select region",
-                                                          "Select one or more countries"))
+    ## Add sidebar to the app
+    st.sidebar.title("GENOMICS AFRICA")
+    st.sidebar.subheader("Results Updated – %s" % last_update)
 
-if selection == "Show all countries":
-    countries_selected = df_africa['country'].unique()
-    display_countries = "all countries in Africa continent"
-elif selection == "Select region":
-    aux_countries = []
-    countries_selected = st.sidebar.multiselect('What region do you want to analyze?', countries_regions.keys(),
-                                                default='Northern Africa')
-    display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
-        countries_selected) > 2 else countries_selected)
-    for key in countries_selected:
-        aux_countries.extend(countries_regions[key])
-    countries_selected = aux_countries
-else:
-    countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries, default='Morocco')
-    display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
-        countries_selected) > 2 else countries_selected)
-mask_countries = df_africa['country'].isin(countries_selected)
-df_africa = df_africa[mask_countries]
+    # Sidebar filter data
+    st.sidebar.markdown(" ")
+    st.sidebar.header("Filter data ")
+    df_africa, display_countries = filter_countries(df_africa)
 
-# Building pangolin data frame
-pangolin_count = pd.DataFrame(df_africa.pangolin_lineage2)
-pangolin_count = pangolin_count.groupby(['pangolin_lineage2']).size().reset_index(name='Count').sort_values(['Count'],
-                                                                                                            ascending=True)
-pangolin_count_top20 = pangolin_count.tail(20)
-pangolin_count_top20['pangolin_africa'] = pangolin_count_top20.pangolin_lineage2
+    # Sidebar filter lineages
+    df_africa, variant_count = filter_lineages(df_africa)
 
-# Filter by Lineages
-st.sidebar.write("Select variants/lineages to show")
-#voc_selected = st.sidebar.checkbox("Show Variants of Concern (VOCs)")
-# lineages = pangolin_count_top20['pangolin_africa']
-# if voc_selected:
-#     lineages = pd.Series(concerned_variants)
-# else:
-#     lineages = pangolin_count_top20['pangolin_africa']
+    # Building percentage dataframe
+    variants_percentage = df_africa.groupby(['date2', 'variant']).agg({'Count': 'sum'})
+    variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
+    variants_percentage = variants_percentage.reset_index()
 
-### Change pangolin names to use "other lineages" for all lineages that is not VOC
-variantes = lineages_to_concerned_variantes(df_africa,'pangolin_lineage2')
-df_africa['pangolin_lineage2'] = variantes
+    # Metrics
+    show_metrics(df_africa)
 
-lineages_selected = st.sidebar.multiselect('', df_africa['pangolin_lineage2'].unique(), default=df_africa['pangolin_lineage2'].unique())
-mask_lineages = df_africa['pangolin_lineage2'].isin(lineages_selected)
-df_africa = df_africa[mask_lineages]
+    # End of sidebar
+    st.sidebar.header("About")
+    about_section()
+    st.sidebar.header("Acknowledgment")
+    acknowledgment_section(logo_path='img/gisaid_logo.png', link='https://www.gisaid.org/')
 
-# TODO: Filter by Period
-# df_africa.dropna(subset=['date', 'date2'], inplace=True)
-# df_africa['date2'] = df_africa['date2'].sort_values(ascending=True)
-# # st.write(df_africa['date2'].unique())
-# start_date, end_date = st.sidebar.select_slider("Select a range of time to show", options=df_africa['date2'].unique(),
-#                                                  value=(df_africa['date2'][0], df_africa['date2'][48]))
-# st.sidebar.write('Starts from', start_date, 'to', end_date)
-#
-# df_africa = df_africa.loc[(df_africa['date2'] >= start_date) & (df_africa['date2'] <= end_date)]
+    # Add title and subtitle to the main interface of the app
+    main_title(display_countries)
 
-### Merge df_africa with pangolin_count_top20
+    ### Layout of main page
+    c1, c2 = st.columns((1.5, 1.9))
 
-try:
-    df_africa1 = pd.merge(df_africa, pangolin_count_top20, on='pangolin_lineage2', how='left')
-except pd.errors.MergeError as e:
-    st.error("Error on merge dataframe:")
-    st.error(e)
+    ############ First column ###############
+    ############## MAP CHART ################
+    scatter_africa_map(df_africa, column=c1)
 
-df_africa1.pangolin_africa[df_africa1.pangolin_africa.isna()] = 'NA'
+    ############ Second column ###############
+    ####### TOP 20 CHART ###########
+    variants_bar_plot(variants_percentage, c2)
 
-variants_percentage = df_africa1.groupby(['date2', 'pangolin_africa']).agg({'Count_x': 'sum'})
-variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
-variants_percentage = variants_percentage.reset_index()
+    ####### COUNTRIES WHITH SEQUENCE CHART #########
+    countries_with_sequences_chart(df_africa, c2)
 
-st.sidebar.markdown(
-    "Figures updated from [Wilkinson et al. Science 2021](https://www.krisp.org.za/manuscripts/Wilkinson_AfricaGenomics_Science2021.pdf?_ga=2.79914768.662718457.1637830871-1378797665.1637307000)")
-st.sidebar.markdown("Contact email: tulio@sun.ac.za")
-#### End of sidebar
+    ########### TABLE WEEKLY VARIANT SUMMARY #########
+    st.header("Variant details")
+    weekly_variants_df = pd.read_csv("data/Africa_weekly_variant_summary.csv")
+    with st.container():
+        with st.expander("Africa weekly variant summary"):
+            st.table(weekly_variants_df)
 
-# #Add title and subtitle to the main interface of the app
-st.markdown("<h1 style='text-align: center; color: #FF7557;'>SARS-COV-2 AFRICA DASHBOARD</h1>", unsafe_allow_html=True)
+    c1_2, c2_2 = st.columns((1, 1))
+    with c1_2.container():
+        with c1_2.expander("Alpha variant"):
+            alpha_img = Image.open("data/figures/alpha-stanford-3-1536x226.png")
+            st.image(alpha_img, caption="SARS_CoV2 Alpha variant sequence")
 
-st.markdown("<h5 style='text-align: center;'>Showing results from %s </h5>" % display_countries, unsafe_allow_html=True)
+    with c2_2.container():
+        with c2_2.expander("Beta variant"):
+            beta_img = Image.open("data/figures/Beta-stanford.png")
+            st.image(beta_img, caption="SARS_CoV2 Beta variant sequence")
 
-### Layout of main page
-c1, c2 = st.columns((1.5, 1.9))
+    with c1_2.container():
+        with c1_2.expander("Delta variant"):
+            delta_img = Image.open("data/figures/Delta-stanford.png")
+            st.image(delta_img, caption="SARS_CoV2 Delta variant sequence")
 
-############ First column ###############
-############## MAP CHART ################
+    with c2_2.container():
+        with c2_2.expander("Omicron variant"):
+            omicron_img = Image.open("data/figures/omicron-stanford.png")
+            st.image(omicron_img, caption="SARS_CoV2 Omicron variant sequence")
 
-# Reading Africa map and joing with africa_df information
-gdf = gpd.read_file('data/africa.geojson')
-df_map = gdf.merge(df_africa1, left_on="sovereignt", right_on="country", how="outer")
-df_map = df_map[
-    ['strain', 'virus', 'date', 'date2', 'country', 'division', 'pangolin_africa', 'Nextstrain_variants', 'sovereignt',
-     'sov_a3', 'geometry']]
+    with c1_2.container():
+        with c1_2.expander("A.23.1 variant"):
+            a231_img = Image.open("data/figures/a231-stanford.png")
+            st.image(a231_img, caption="SARS_CoV2 A.23.1 variant sequence")
 
-df_map['date'] = pd.to_datetime(df_map['date'], format='%Y-%m-%d', yearfirst=True)
-initial_date = df_map['date'].min()
-initial_date = initial_date.strftime('%Y-%m-%d')
-final_date = df_map['date'].max()
-final_date = final_date.strftime('%Y-%m-%d')
+    with c2_2.container():
+        with c2_2.expander("B.1.1.318 variant"):
+            b11318_img = Image.open("data/figures/b11318-stanford.png")
+            st.image(b11318_img, caption="SARS_CoV2 B.1.1.318 variant sequence")
 
-countries_codes = df_map[['country', 'sov_a3']]
-countries_codes.drop_duplicates(inplace=True)
+    with c1_2.container():
+        with c1_2.expander("C.1 variant"):
+            c1_img = Image.open("data/figures/c1-stanford.png")
+            st.image(c1_img, caption="SARS_CoV2 C.1 variant sequence")
 
-## count strains per country - by total
-count_variants = df_map.groupby(['country', 'pangolin_africa', 'date2'], as_index=False).size().rename(
-    columns={'size': 'counts'})
-count_variants = count_variants.merge(countries_codes, on='country', how='left')
+    with c2_2.container():
+        with c2_2.expander("C.1.2 variant"):
+            c12_img = Image.open("data/figures/c12-stanford.png")
+            st.image(c12_img, caption="SARS_CoV2 C.1.2 variant sequence")
 
-## count strains per country - by percentage of each lineage in the country
-count_variants['percentage'] = 100 * count_variants['counts'] / count_variants.groupby('country')['counts'].transform(
-    'sum')
+    with c1_2.container():
+        with c1_2.expander("C.36.3 variant"):
+            c363_img = Image.open("data/figures/c.36.3-stanford.png")
+            st.image(c363_img, caption="SARS_CoV2 C.36.3 variant sequence")
 
-with st.container():
-    # Radio selection for scale of data to show
-    # COLORPATH SELECTION
-    # map_scale = c1.radio("Select scale you want to show the data", ("Absolute", "Relative (%)"))
-    # st.write('<style>div.row-widget.stRadio > div{flex-direction:row;}</style>', unsafe_allow_html=True)
-    # if map_scale == "Absolute":
-    #     map_count_column = 'counts'
-    # else:
-    #     map_count_column = 'percentage'
-    map_count_column = 'percentage'
+    with c2_2.container():
+        with c2_2.expander("Eta variant"):
+            eta_img = Image.open("data/figures/Eta-stanford.png")
+            st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
 
-    # Lineage selection to color
-    # colour_by = c1.selectbox('Colour map by', concerned_variants, index=len(concerned_variants) - 1)
-    # coloured_map = count_variants[count_variants.pangolin_africa == colour_by]
-    coloured_map = count_variants
+if __name__ == "__main__":
+    main()
 
-    # Building synthetic data to set initial and end date for dataframe
-    synthetic_data = []
-    for index, row in coloured_map.groupby('country')[['pangolin_africa', 'sov_a3']].agg(
-            'first').reset_index().iterrows():
-        synthetic_data.append([row['country'], row['pangolin_africa'], initial_date, np.NAN, row['sov_a3'], np.NAN])
-        synthetic_data.append([row['country'], row['pangolin_africa'], final_date, np.NAN, row['sov_a3'], np.NAN])
-    synthetic_data = pd.DataFrame(synthetic_data,
-                                  columns=['country', 'pangolin_africa', 'date2', 'counts', 'sov_a3', 'percentage'])
-    coloured_map = coloured_map.append(synthetic_data).sort_values(by=['date2'])
 
-    # Setting up latitude and longitude columns
-    # longitude = []
-    # latitude = []
-    # for i in coloured_map['country']:
-    #     if findGeocode(i) != None:
-    #         loc = findGeocode(i)
-    #         latitude.append(loc.latitude)
-    #         longitude.append(loc.longitude)
-    #     else:
-    #         latitude.append(np.nan)
-    #         longitude.append(np.nan)
-    #
-    # coloured_map["lat"] = latitude
-    # coloured_map["long"] = longitude
-    #c1.write(coloured_map.head())
-
-    # Filling NA values
-    counts = []
-    min_country_dates = coloured_map.groupby('country').agg({'date2': 'min'}).reset_index()
-
-    for index, row in coloured_map.iterrows():
-        min_date = min_country_dates['date2'].loc[min_country_dates['country'] == row['country']].min()
-        if (row['date2'] == min_date) and np.isnan(row['counts']) == True:
-            counts.append(0)
-        else:
-            counts.append(row['counts'])
-    coloured_map['counts'] = counts
-    coloured_map_aux = coloured_map.sort_values(by=['country', 'date2'])
-    coloured_map_aux['counts'] = coloured_map_aux['counts'].fillna(method='ffill')
-    coloured_map = coloured_map_aux.sort_values(by='date2')
-
-    if coloured_map[map_count_column].empty:
-        c1.warning("No data to show for this lineage.")
-        fig_map = px.line_geo(lat=[0, 0, 0, 0], lon=[0, 0, 0, 0])
-    else:
-        # c1.write(coloured_map)
-        coloured_map['variants'] = lineages_to_concerned_variantes(coloured_map, 'pangolin_africa')
-        c1.subheader("Genomes per lineage")
-
-        ### variants legend
-        legend_box = st.container()
-        legend_box.write(custom_legend(concerned_variants, main_lineages_color_scheme, c1))
-
-        fig_map = px.scatter_geo(coloured_map, locations='sov_a3', hover_name='country',
-                                 hover_data=['pangolin_africa', 'counts', 'percentage'],
-                                 labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
-                                         'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
-                                 animation_frame="date2", size='counts', animation_group='country',
-                                 color='variants', size_max=100,
-                                 color_discrete_map=main_lineages_color_scheme)
-        fig_map.update_traces(marker=dict(
-                                            size=coloured_map['counts'],
-                                            line_width=5,
-                                            sizeref=1,
-                                            sizemode="area",
-                                            reversescale=True,
-                                            line=dict(width=3,
-                                                      color='rgba(68, 68, 68, 0)')))
-        fig_map.update_layout(geo_scope='africa')
-        fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                              legend=dict(orientation='h'))
-        fig_map.update_layout(title_y=1)
-        last_frame_num = int(len(fig_map.frames) - 2)
-        fig_map.layout['sliders'][0]['active'] = last_frame_num
-        fig_map.update_layout(showlegend=False)
-    c1.plotly_chart(fig_map, use_container_width=True)
-
-############ Second column ###############
-####### TOP 20 CHART ###########
-#TODO consertar esse gráfico pra calcular porcentagem para todas as variantes
-with st.container():
-    fig = px.bar(variants_percentage.sort_values(by=['pangolin_africa']), x='date2', y='Count_x',
-                 color='pangolin_africa', color_discrete_map=main_lineages_color_scheme,
-                 # color_discrete_sequence=px.colors.qualitative.Prism,
-                 barmode='stack', title="Circulating lineages and variants",
-                 custom_data=['pangolin_africa', 'Count_x', 'date2'],
-                 labels={'pangolin_africa': 'Lineage', 'Count_x': 'Percentage', 'date2': 'Date'})
-    fig.update_yaxes(title="Proportion of Genomes")
-    fig.update_xaxes(title="Date", range=[variants_percentage['date2'].min(), datetime.today()])
-    fig.update_layout(legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=0.9,
-        xanchor="right",
-        x=1
-    ), legend_title_text="Lineages", height=450)
-    fig.update_layout(title=dict(y=1))
-    c2.plotly_chart(fig, use_container_width=True)
-
-####### COUNTRIES WHITH SEQUENCE CHART #########
-df_country_lineages = df_africa.copy()
-df_country_lineages['variant'] = lineages_to_concerned_variantes(df_country_lineages, 'pangolin_lineage2')
-
-with st.container():
-    country_lineages = px.scatter(df_country_lineages, x="date", y="country", color="variant",
-                                  title="Sequence data", color_discrete_map=main_lineages_color_scheme)
-    country_lineages.update_traces(marker=dict(size=15, line=dict(width=0.5, color='#E5ECF6')))
-    country_lineages.update_layout(legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1,
-        xanchor="right",
-        x=1
-    ), legend_title_text="Variants")
-    country_lineages.update_layout(title=dict(y=1), yaxis={'categoryorder': 'category descending'})
-    c2.plotly_chart(country_lineages, use_container_width=True)
-
-########### TABLE WEEKLY VARIANT SUMMARY #########
-st.header("Variant details")
-weekly_variants_df = pd.read_csv("data/Africa_weekly_variant_summary.csv")
-with st.container():
-    with st.expander("Africa weekly variant summary"):
-        st.table(weekly_variants_df)
-
-c1_2, c2_2 = st.columns((1, 1))
-with c1_2.container():
-    with c1_2.expander("Alpha variant"):
-        sarscov2_reference_img = Image.open("data/figures/SARS_Cov2_reference_sequence.png")
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        alpha_img = Image.open("data/figures/alpha-stanford-3-1536x226.png")
-        st.image(alpha_img, caption="SARS_CoV2 Alpha variant sequence")
-
-with c2_2.container():
-    with c2_2.expander("Beta variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        beta_img = Image.open("data/figures/Beta-stanford.png")
-        st.image(beta_img, caption="SARS_CoV2 Beta variant sequence")
-
-with c1_2.container():
-    with c1_2.expander("Delta variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        delta_img = Image.open("data/figures/Delta-stanford.png")
-        st.image(delta_img, caption="SARS_CoV2 Delta variant sequence")
-
-with c2_2.container():
-    with c2_2.expander("Omicron variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        omicron_img = Image.open("data/figures/omicron-stanford.png")
-        st.image(omicron_img, caption="SARS_CoV2 Omicron variant sequence")
-
-with c1_2.container():
-    with c1_2.expander("A.23.1 variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        a231_img = Image.open("data/figures/a231-stanford.png")
-        st.image(a231_img, caption="SARS_CoV2 A.23.1 variant sequence")
-
-with c2_2.container():
-    with c2_2.expander("B.1.1.318 variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        b11318_img = Image.open("data/figures/b11318-stanford.png")
-        st.image(b11318_img, caption="SARS_CoV2 B.1.1.318 variant sequence")
-
-with c1_2.container():
-    with c1_2.expander("C.1 variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        c1_img = Image.open("data/figures/c1-stanford.png")
-        st.image(c1_img, caption="SARS_CoV2 C.1 variant sequence")
-
-with c2_2.container():
-    with c2_2.expander("C.1.2 variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        c12_img = Image.open("data/figures/c12-stanford.png")
-        st.image(c12_img, caption="SARS_CoV2 C.1.2 variant sequence")
-
-with c1_2.container():
-    with c1_2.expander("C.36.3 variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        c363_img = Image.open("data/figures/c.36.3-stanford.png")
-        st.image(c363_img, caption="SARS_CoV2 C.36.3 variant sequence")
-
-with c2_2.container():
-    with c2_2.expander("Eta variant"):
-        st.image(sarscov2_reference_img, caption="SARS_CoV2 Reference sequence")
-        eta_img = Image.open("data/figures/Eta-stanford.png")
-        st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
-
-st.sidebar.markdown("Acknowledgment:")
-st.sidebar.image("img/gisaid_logo.png")
