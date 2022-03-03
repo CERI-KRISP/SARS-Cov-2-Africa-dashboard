@@ -20,7 +20,7 @@ variant_names = {'B.1.1.7': 'Alpha', 'B.1.1.7 (Alpha)': 'Alpha',
                  'P.1': 'Gamma', 'P.1.1': 'Gamma',
                  'B.1.617.2/AY.x': 'Delta', 'B.1.617.2': 'Delta', 'B.1.617.2/AY.x (Delta)': 'Delta',
                  'B.1.525 (Eta)' : 'B.1.525', 'B.1.1.529 (Omicron)': 'Omicron',
-                 'B.1.1.529':'Omicron', 'BA.1': 'Omicron', 'BA.1.1': 'Omicron', 'BA.2': 'Omicron', 'BA.3':'Omicron',}
+                 'B.1.1.529':'Omicron', 'BA.1': 'Omicron', 'BA.1.1': 'Omicron', 'BA.2': 'Omicron', 'BA.3':'Omicron'}
 
 # Concerned variants based on WHO Feb 16
 concerned_variants = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Omicron', 'Other Lineages']
