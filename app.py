@@ -6,11 +6,12 @@ from source.pages.header import *
 from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
 from source.graphs.countries_sequences import countries_with_sequences_chart
+from utils.data_process import *
 
 # Import Python Libraries
 import pandas as pd
 from PIL import Image
-
+import os
 
 def main():
     st.set_page_config(
@@ -22,16 +23,24 @@ def main():
     st.markdown(css_changes, unsafe_allow_html=True)
     remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
-    ##### INPUTS ######
-    df_africa_path = "./data/africa.csv"
-    df_africa = pd.read_csv(df_africa_path)
-    df_africa = df_africa[df_africa.pangolin_lineage2 != 'None']
+    ##### CHECK VARIABLE FOR INPUT ######
+    data_source = "metadata"
+
+    if data_source == "metadata":
+        df_africa = process_data_from_gisaid_metadata()
+    if data_source == "GISAID_API":
+        df_africa = process_data_from_gisaid_api()
+    else:
+        print("Invalid data source. Please, see the documentation.")
 
     # Add variant name columns
     df_africa['variant'] = df_africa['pangolin_lineage2']
     df_africa.replace({"variant": variant_names}, inplace=True)
     df_africa['variant'] = lineages_to_concerned_variants(df_africa, 'variant')
     last_update = "17 February 2022"
+
+    #saving for a while
+    df_africa.to_csv("data/df_processed.csv")
 
     ## Add sidebar to the app
     st.sidebar.title("GENOMICS AFRICA")

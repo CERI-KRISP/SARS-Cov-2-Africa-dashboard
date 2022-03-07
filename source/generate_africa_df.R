@@ -42,5 +42,5 @@ df_count[df_count == "Cabo Verde"] <- "Cape Verde"
 df_count[df_count == "Côte d'Ivoire"] <- "Ivory Coast"
 df_count[df_count == "Union of the Comoros"] <- "Comoros"
 
-write.csv(df_africa, "./data/africa.csv", row.names = FALSE)
-print("africa.csv updated!")
+write.csv(df_africa, "./data/metadata.csv", row.names = FALSE)
+print("metadata.csv updated!")

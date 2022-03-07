@@ -11,13 +11,17 @@ Example: `Rscript source/generate_africa_df.R  data/africa_all_data_versions/Afr
 3. `streamlit run app.py`
 
 ## Data
-You can run the dashboard using GISAID data or your own data through a csv file
-### Using your own data
-Fill the csv with your data in `data/database_template.csv`
+You can run the dashboard using GISAID metadata or setup to automatically from GISAID API.
+### Using metadata
+1. Define the environment variable with your option: `export SARSCOV2_DATA="metadata"`
+2. Generate or update `data/metadata.csv` file: 
+   1. Run R script in `source/generate_africa_df.R <Excel file path>`
+   2. Example: `Rscript source/generate_africa_df.R  data/africa_all_data_versions/Africa_all_data_4dec_gooddates.xlsx`
 
-### Using GISAID data
-1. Work with GISAID to get a data agreement. 
-2. Define the following environment variables:
+### Using API
+1. Define the environment variable with your option: `export SARSCOV2_DATA="GISAID_API"`
+2. Work with GISAID to get a data agreement. 
+3. Define the following environment variables:
 ~~~
 GISAID_URL
 GISAID_USERNAME

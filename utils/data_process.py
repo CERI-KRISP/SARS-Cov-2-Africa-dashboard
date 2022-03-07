@@ -72,4 +72,9 @@ def process_data_from_gisaid_api():
     df['covv_lineage'] = lineages
     df.dropna(subset=['covv_lineage'], inplace=True)
     return df
-process_data_from_gisaid_api()
+def process_data_from_gisaid_metadata():
+    df_path = "./data/metadata.csv"
+    df = pd.read_csv(df_path)
+    #TODO: mudar colunas para pegar as originais dos metadados
+    df = df[df.pangolin_lineage2 != 'None']
+    return df
