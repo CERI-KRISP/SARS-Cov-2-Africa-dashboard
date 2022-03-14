@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 import requests
-import lzma
+#import lzma
 import json
 import pandas as pd
 
