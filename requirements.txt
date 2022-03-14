@@ -4,4 +4,4 @@ xlrd==1.2.0
 geopandas
 plotly
 geopy==2.2.0
-backports.lzma==0.0.14
+#backports.lzma==0.0.14
