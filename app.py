@@ -24,18 +24,19 @@ def main():
     remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
     ##### CHECK VARIABLE FOR INPUT ######
-    data_source = "metadata"
+    # data_source = "GISAID_API"
+    #
+    # if data_source == "metadata":
+    #     df_africa = process_data_from_gisaid_metadata()
+    # if data_source == "GISAID_API":
+    #     df_africa = process_data_from_gisaid_api()
+    # else:
+    #     print("Invalid data source. Please, see the documentation.")
+    # TODO: criar função para salvar em arquivo o df processado até aqui como input da tabela do Wasim
+    # TODO: fazer função para contar as variantes por data e país (substituir arquivo Houriiyah)
+    df_africa = pd.read_csv('data/df_processed.csv')
 
-    if data_source == "metadata":
-        df_africa = process_data_from_gisaid_metadata()
-    if data_source == "GISAID_API":
-        df_africa = process_data_from_gisaid_api()
-    else:
-        print("Invalid data source. Please, see the documentation.")
-
-    # Add variant name columns
-    df_africa['variant'] = df_africa['pangolin_lineage2']
-    df_africa.replace({"variant": variant_names}, inplace=True)
+    # Convert variant column to short variant names
     df_africa['variant'] = lineages_to_concerned_variants(df_africa, 'variant')
     last_update = "17 February 2022"
 

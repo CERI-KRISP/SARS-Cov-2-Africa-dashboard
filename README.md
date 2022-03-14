@@ -11,7 +11,8 @@ Example: `Rscript source/generate_africa_df.R  data/africa_all_data_versions/Afr
 3. `streamlit run app.py`
 
 ## Data
-You can run the dashboard using GISAID metadata or setup to automatically from GISAID API.
+You can run the dashboard using metadata input for the Augur pipeline, provided by GISAID or setup to automatically from GISAID API.
+See a template when the required columns highlighted [here](data/template_metadata.csv).
 ### Using metadata
 1. Define the environment variable with your option: `export SARSCOV2_DATA="metadata"`
 2. Generate or update `data/metadata.csv` file: 
