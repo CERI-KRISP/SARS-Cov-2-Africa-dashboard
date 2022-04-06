@@ -4,14 +4,19 @@ import pandas as pd
 from utils.dicts import countries_regions
 from utils.functions import get_img_with_href
 
-def filter_countries(df_africa):
+
+@st.cache()
+def get_countries(df_africa):
+    return df_africa['country'].unique()
+
+
+def get_countries_choice(df_africa):
     # Filter by selected country
-    countries = df_africa['country'].unique()
+    countries = get_countries(df_africa)
     selection = st.sidebar.radio("Select Countries to show", ("Show all countries", "Select region",
                                                               "Select one or more countries"))
-
     if selection == "Show all countries":
-        countries_selected = df_africa['country'].unique()
+        countries_selected = countries
         display_countries = "all countries in Africa continent"
     elif selection == "Select region":
         aux_countries = []
@@ -22,60 +27,99 @@ def filter_countries(df_africa):
         for key in countries_selected:
             aux_countries.extend(countries_regions[key])
         countries_selected = aux_countries
-        print(countries_selected)
-        df_africa.to_csv("data/analyses/df_after_select_region.csv")
     else:
         countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries,
                                                     default='South Africa')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
-    mask_countries = df_africa['country'].isin(countries_selected)
-    df_africa = df_africa[mask_countries]
-    return df_africa, display_countries
 
-def filter_lineages(df_africa):
+    return countries_selected, display_countries
 
+
+@st.cache()
+def get_variants(df_africa):
+    return df_africa['variant'].unique()
+
+
+def get_lineages_choice(df_africa):
+    variants = get_variants(df_africa)
+    lineages_selected = st.sidebar.multiselect("Select variants to show", variants,
+                                               default=sorted(variants))
+    return lineages_selected
+
+
+@st.cache()
+def get_dates(df_africa):
+    # TODO: instead of dropna, check if there is information on colention date
+    df_africa.dropna(subset=['date_2weeks'], inplace=True)
+
+    df_africa['date_2weeks'] = pd.to_datetime(df_africa['date_2weeks'], errors='coerce', format='%Y-%m-%d',
+                                              yearfirst=True)
+
+    df_africa['date_2weeks'] = df_africa['date_2weeks'].sort_values(ascending=False)
+    df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%Y-%m-%d')
+    # df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%b %d,%Y')
+    return df_africa['date_2weeks'].unique()
+
+
+def get_dates_choice(df_africa):
+    dates = get_dates(df_africa)
+    start_date, end_date = st.sidebar.select_slider("Select a range of time to show",
+                                                    options=sorted(dates),
+                                                    value=(dates.min(),
+                                                           dates.max()))
+    return start_date, end_date
+
+
+@st.cache()
+def build_variant_count_df(df_africa):
     # Building variant data frame
     variant_count = pd.DataFrame(df_africa.variant)
     variant_count = variant_count.groupby(['variant']).size().reset_index(name='Count').sort_values(['Count'],
-        ascending=True)
+                                                                                                    ascending=True)
+    return variant_count
 
-    # Filter by Variants
-    lineages_selected = st.sidebar.multiselect("Select variants to show", df_africa['variant'].unique(),
-                                               default=sorted(df_africa['variant'].unique()))
-    mask_lineages = df_africa['variant'].isin(lineages_selected)
+
+@st.cache()
+def build_df_count_df(df_africa):
+    return df_africa.groupby(['country', 'variant', 'date_2weeks']).size().reset_index(name='Count')
+
+
+@st.cache()
+def build_variant_percentage_df(df_count):
+    variants_percentage = df_count.groupby(['date_2weeks', 'variant']).agg({'Count': 'sum'})
+    variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
+    variants_percentage = variants_percentage.reset_index()
+    return variants_percentage
+
+
+@st.cache()
+def filter_df_africa(countries_choice, lineages_choice, start_date, end_date, df_africa):
+    """
+    Function to filter and return all dfs used in the visualizations
+    :return:
+    """
+    # filter by country
+    mask_countries = df_africa['country'].isin(countries_choice)
+    df_africa = df_africa[mask_countries]
+
+    # filter by variant
+    mask_lineages = df_africa['variant'].isin(lineages_choice)
     df_africa = df_africa[mask_lineages]
     df_africa.variant[df_africa.variant.isna()] = 'NA'
 
-    return df_africa, variant_count
-
-def filter_by_period(df_africa):
-    # TODO: Filter by Period
-    df_africa.dropna(subset=['date_2weeks'], inplace=True)
-
-    df_africa['date_2weeks'] = pd.to_datetime(df_africa['date_2weeks'], errors='coerce', format='%Y-%m-%d', yearfirst=True)
-
-    df_africa['date_2weeks'] = df_africa['date_2weeks'].sort_values(ascending=False)
-    df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%b %d,%Y')
-
-    start_date, end_date = st.sidebar.select_slider("Select a range of time to show",
-                                                    options=sorted(df_africa['date_2weeks'].unique()),
-                                                    value=(df_africa['date_2weeks'].min(),
-                                                           df_africa['date_2weeks'].max()))
-
-    # make selection
+    # filter by period
     df_africa = df_africa.loc[(df_africa['date_2weeks'] >= start_date) & (df_africa['date_2weeks'] <= end_date)]
 
-    # returning original date format
-    df_africa['date_2weeks'] = df_africa['collection_date'] + pd.offsets.SemiMonthEnd()
-    df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%Y-%m-%d')
     return df_africa
+
 
 def show_metrics(df_africa):
     sd_col1, sd_col2 = st.sidebar.columns(2)
     sequences = int(df_africa.shape[0])
     sd_col1.metric("Sequences selected", '{:,}'.format(sequences))
     sd_col2.metric("Countries selected", len(df_africa.country.unique()))
+
 
 def about_section():
     st.sidebar.info("""
@@ -85,7 +129,7 @@ def about_section():
     Contact email: tulio@sun.ac.za
     """)
 
-@st.cache(allow_output_mutation=True)
+
 def acknowledgment_section(logo_path, link):
     logo = get_img_with_href(logo_path, link)
     st.sidebar.markdown(logo, unsafe_allow_html=True)

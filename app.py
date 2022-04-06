@@ -1,8 +1,10 @@
 # Import project packages
 import datetime
 
+import streamlit
+
 from config import *
-from source.pages.sidebar import *
+from source.pages import sidebar as sd
 from source.pages.header import *
 from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
@@ -44,30 +46,42 @@ def main():
     # Sidebar filter data
     st.sidebar.markdown(" ")
     st.sidebar.header("Filter data ")
-    df_africa, display_countries = filter_countries(df_africa)
+
+    # Filter data by countries
+    countries_choice, display_countries = sd.get_countries_choice(df_africa)
 
     # Sidebar filter lineages
-    df_africa, variant_count = filter_lineages(df_africa)
-
-    # Couting variants
-    df_count = df_africa.groupby(['country', 'variant', 'date_2weeks']).size().reset_index(name='Count')
-
-    # Building percentage dataframe
-    variants_percentage = df_count.groupby(['date_2weeks', 'variant']).agg({'Count': 'sum'})
-    variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
-    variants_percentage = variants_percentage.reset_index()
+    lineages_choice = sd.get_lineages_choice(df_africa)
 
     # Sidebar filter period
-    df_africa = filter_by_period(df_africa)
+    start_date, end_date = sd.get_dates_choice(df_africa)
+
+    ### Auxiliar dataframes ###
+
+    # Variant count dataframe
+    # variant_count = sd.build_variant_count_df(df_africa)
+
+    # Couting variants
+    df_count = sd.build_df_count_df(df_africa)
+
+    # Building percentage dataframe
+    variants_percentage = sd.build_variant_percentage_df(df_count)
+
+    # Button to call filtering function
+    if st.sidebar.button("Filter data"):
+        df_africa = sd.filter_df_africa(countries_choice, lineages_choice, start_date, end_date, df_africa)
+        # variant_count = sd.build_variant_count_df(df_africa)
+        df_count = sd.build_df_count_df(df_africa)
+        variants_percentage = sd.build_variant_percentage_df(df_count)
 
     # Metrics
-    show_metrics(df_africa)
+    sd.show_metrics(df_africa)
 
     # End of sidebar
     st.sidebar.header("About")
-    about_section()
+    sd.about_section()
     st.sidebar.header("Acknowledgment")
-    acknowledgment_section(logo_path='img/gisaid_logo.png', link='https://www.gisaid.org/')
+    sd.acknowledgment_section(logo_path='img/gisaid_logo.png', link='https://www.gisaid.org/')
 
     # Add title and subtitle to the main interface of the app
     main_title(display_countries)

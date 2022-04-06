@@ -11,7 +11,7 @@ import geopandas as gpd
 from utils.functions import *
 from utils.dicts import *
 
-
+@st.cache(allow_output_mutation=True)
 def map_data(df):
     # function to map countrys to country code and gets initial and final dates from the set
 
@@ -49,7 +49,7 @@ def map_data(df):
 
     return df_map, initial_date, final_date
 
-
+@st.cache(allow_output_mutation=True)
 def count_variants_per_country(df_map):
     countries_codes = df_map[['country', 'sov_a3']]
     countries_codes.drop_duplicates(inplace=True)
@@ -100,7 +100,7 @@ def insert_lat_long_columns(df):
     df["long"] = longitude
     return df
 
-
+@st.cache(allow_output_mutation=True)
 def map_synthetic_data_variant(df, initial_date, final_date):
     coloured_map = df
     synthetic_data = []
@@ -118,7 +118,7 @@ def map_synthetic_data_variant(df, initial_date, final_date):
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
     return coloured_map
 
-
+@st.cache(allow_output_mutation=True)
 def map_synthetic_data(df, initial_date, final_date):
     """
     This function adds initial and final data for all countries and fill with NA the dates without information
@@ -163,7 +163,7 @@ def map_synthetic_data(df, initial_date, final_date):
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
     return coloured_map
 
-
+@st.cache(allow_output_mutation=True)
 def map_fill_na_values(df):
     coloured_map = df
     counts = []
@@ -196,17 +196,13 @@ def colorpath_africa_map(df_africa, column):
 
     # adding synthetic data to fill date gaps
     df_map = map_synthetic_data(df_map, initial_date, final_date)
-    # df_map.to_csv("data/analyses/df_colorpath_map.csv")
 
     # dropping columns we don't need
-    df_map.drop(['variant', 'sovereignt'], axis=1, inplace=True)
+    # df_map.drop(['variant', 'sovereignt'], axis=1, inplace=True)
 
     # cumulative count column
     df_map = df_map.sort_values(by='date_2weeks')
     df_map['cum_counts'] = df_map[['country', 'Count']].groupby('country').cumsum()
-
-    # select the default data to show
-    map_count_column = 'cum_counts'
 
     # Building hover text
     temp_text = []
@@ -233,7 +229,7 @@ def colorpath_africa_map(df_africa, column):
         fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
                               legend=dict(orientation='h')
                               )
-        fig_map.update_layout(title_y=1)
+        fig_map.update_layout(title_y=0.2)
 
         # creating standardize hover template
         custom_hovertemplate = '<b>%{customdata[0]} </b><br><br>' + \
