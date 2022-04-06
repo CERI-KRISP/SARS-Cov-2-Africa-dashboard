@@ -4,7 +4,7 @@ library(dplyr)
 library(tidyr)
 library(lubridate)
 #read data file
-Africa_df <- read.csv("df_africa.csv")
+Africa_df <- read.csv("df_processed.csv")
 
 #create buckets for and clade assignment
 alpha <- c("VOC Alpha GRY (B.1.1.7+Q.*) first detected in the UK")

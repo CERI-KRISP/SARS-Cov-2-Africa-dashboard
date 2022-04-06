@@ -4,7 +4,6 @@ import pandas as pd
 from utils.dicts import countries_regions
 from utils.functions import get_img_with_href
 
-
 def filter_countries(df_africa):
     # Filter by selected country
     countries = df_africa['country'].unique()
@@ -17,15 +16,17 @@ def filter_countries(df_africa):
     elif selection == "Select region":
         aux_countries = []
         countries_selected = st.sidebar.multiselect('What region do you want to analyze?', countries_regions.keys(),
-                                                    default='Northern Africa')
+                                                    default='Southern Africa')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
         for key in countries_selected:
             aux_countries.extend(countries_regions[key])
         countries_selected = aux_countries
+        print(countries_selected)
+        df_africa.to_csv("data/analyses/df_after_select_region.csv")
     else:
         countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries,
-                                                    default='Morocco')
+                                                    default='South Africa')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
     mask_countries = df_africa['country'].isin(countries_selected)
@@ -50,14 +51,25 @@ def filter_lineages(df_africa):
 
 def filter_by_period(df_africa):
     # TODO: Filter by Period
-    df_africa.dropna(subset=['date', 'date2'], inplace=True)
-    df_africa['date2'] = df_africa['date2'].sort_values(ascending=True)
-    # st.write(df_africa['date2'].unique())
-    start_date, end_date = st.sidebar.select_slider("Select a range of time to show", options=df_africa['date2'].unique(),
-                                                     value=(df_africa['date2'][0], df_africa['date2'][48]))
-    st.sidebar.write('Starts from', start_date, 'to', end_date)
+    df_africa.dropna(subset=['date_2weeks'], inplace=True)
 
-    df_africa = df_africa.loc[(df_africa['date2'] >= start_date) & (df_africa['date2'] <= end_date)]
+    df_africa['date_2weeks'] = pd.to_datetime(df_africa['date_2weeks'], errors='coerce', format='%Y-%m-%d', yearfirst=True)
+
+    df_africa['date_2weeks'] = df_africa['date_2weeks'].sort_values(ascending=False)
+    df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%b %d,%Y')
+
+    start_date, end_date = st.sidebar.select_slider("Select a range of time to show",
+                                                    options=sorted(df_africa['date_2weeks'].unique()),
+                                                    value=(df_africa['date_2weeks'].min(),
+                                                           df_africa['date_2weeks'].max()))
+
+    # make selection
+    df_africa = df_africa.loc[(df_africa['date_2weeks'] >= start_date) & (df_africa['date_2weeks'] <= end_date)]
+
+    # returning original date format
+    df_africa['date_2weeks'] = df_africa['collection_date'] + pd.offsets.SemiMonthEnd()
+    df_africa['date_2weeks'] = df_africa['date_2weeks'].dt.strftime('%Y-%m-%d')
+    return df_africa
 
 def show_metrics(df_africa):
     sd_col1, sd_col2 = st.sidebar.columns(2)
@@ -72,6 +84,8 @@ def about_section():
     
     Contact email: tulio@sun.ac.za
     """)
+
+@st.cache(allow_output_mutation=True)
 def acknowledgment_section(logo_path, link):
     logo = get_img_with_href(logo_path, link)
     st.sidebar.markdown(logo, unsafe_allow_html=True)

@@ -1,5 +1,8 @@
 import base64
 import os
+import time
+import stat
+
 import streamlit as st
 
 from geopy.exc import GeocoderTimedOut
@@ -63,3 +66,6 @@ def get_img_with_href(local_img_path, target_url):
             <img src="data:image/{img_format};base64,{bin_str}" />
         </a>'''
     return html_code
+def last_file_update(file_path):
+    modificationTime = time.strftime('%Y-%m-%d', time.localtime(os.path.getmtime(file_path)))
+    return modificationTime

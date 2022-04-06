@@ -10,7 +10,7 @@ def countries_with_sequences_chart(df_africa, column):
 
     with st.container():
         c.subheader("Sequence data available per country")
-        country_lineages = px.scatter(df_country_lineages, x="date", y="country", color="variant",
+        country_lineages = px.scatter(df_country_lineages, x="date_2weeks", y="country", color="variant",
                                      color_discrete_map=main_lineages_color_scheme)
         country_lineages.update_traces(marker=dict(size=15, line=dict(width=0.5, color='#E5ECF6')))
         country_lineages.update_layout(legend=dict(

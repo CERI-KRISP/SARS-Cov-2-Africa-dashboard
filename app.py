@@ -1,4 +1,5 @@
 # Import project packages
+import datetime
 
 from config import *
 from source.pages.sidebar import *
@@ -23,25 +24,18 @@ def main():
     st.markdown(css_changes, unsafe_allow_html=True)
     remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
+    ##### CHECK LAST UPDATE #####
+    last_update = last_file_update('data/gisaid_data/provision.json.xz')
+
     ##### CHECK VARIABLE FOR INPUT ######
-    # data_source = "GISAID_API"
-    #
-    # if data_source == "metadata":
-    #     df_africa = process_data_from_gisaid_metadata()
-    # if data_source == "GISAID_API":
-    #     df_africa = process_data_from_gisaid_api()
-    # else:
-    #     print("Invalid data source. Please, see the documentation.")
-    # TODO: criar função para salvar em arquivo o df processado até aqui como input da tabela do Wasim
+    if data_source == "metadata":
+        df_africa = process_data_from_gisaid_metadata()
+    if data_source == "GISAID_API":
+        df_africa, last_update = process_data_from_gisaid_api(last_update)
+    else:
+        print("Invalid data source. Please, see the documentation.")
+
     # TODO: fazer função para contar as variantes por data e país (substituir arquivo Houriiyah)
-    df_africa = pd.read_csv('data/df_processed.csv')
-
-    # Convert variant column to short variant names
-    df_africa['variant'] = lineages_to_concerned_variants(df_africa, 'variant')
-    last_update = "17 February 2022"
-
-    #saving for a while
-    df_africa.to_csv("data/df_processed.csv")
 
     ## Add sidebar to the app
     st.sidebar.title("GENOMICS AFRICA")
@@ -55,10 +49,16 @@ def main():
     # Sidebar filter lineages
     df_africa, variant_count = filter_lineages(df_africa)
 
+    # Couting variants
+    df_count = df_africa.groupby(['country', 'variant', 'date_2weeks']).size().reset_index(name='Count')
+
     # Building percentage dataframe
-    variants_percentage = df_africa.groupby(['date2', 'variant']).agg({'Count': 'sum'})
+    variants_percentage = df_count.groupby(['date_2weeks', 'variant']).agg({'Count': 'sum'})
     variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
     variants_percentage = variants_percentage.reset_index()
+
+    # Sidebar filter period
+    df_africa = filter_by_period(df_africa)
 
     # Metrics
     show_metrics(df_africa)
@@ -77,14 +77,21 @@ def main():
 
     ############ First column ###############
     ############## MAP CHART ################
-    scatter_africa_map(df_africa, column=c1)
+    c1.subheader("Continent map")
+    map_option = c1.selectbox(
+        'Metric',
+        ('Number of genomes', 'Variant prevalence'))
+    if map_option == 'Number of genomes':
+        colorpath_africa_map(df_count, column=c1)
+    elif map_option == 'Variant prevalence':
+        scatter_africa_map(df_count, column=c1)
 
     ############ Second column ###############
-    ####### TOP 20 CHART ###########
+    ####### Circulating lineages CHART ###########
     variants_bar_plot(variants_percentage, c2)
 
     ####### COUNTRIES WHITH SEQUENCE CHART #########
-    countries_with_sequences_chart(df_africa, c2)
+    countries_with_sequences_chart(df_count, c2)
 
     ########### TABLE WEEKLY VARIANT SUMMARY #########
     st.header("Variant details")
