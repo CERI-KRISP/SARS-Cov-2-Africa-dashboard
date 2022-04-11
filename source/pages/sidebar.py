@@ -4,23 +4,22 @@ import pandas as pd
 from utils.dicts import countries_regions
 from utils.functions import get_img_with_href
 
-
 @st.cache()
 def get_countries(df_africa):
     return df_africa['country'].unique()
 
 
-def get_countries_choice(df_africa):
+def get_countries_choice(df_africa, form):
     # Filter by selected country
     countries = get_countries(df_africa)
-    selection = st.sidebar.radio("Select Countries to show", ("Show all countries", "Select region",
+    selection = form.radio("Select Countries to show", ("Show all countries", "Select region",
                                                               "Select one or more countries"))
     if selection == "Show all countries":
         countries_selected = countries
         display_countries = "all countries in Africa continent"
     elif selection == "Select region":
         aux_countries = []
-        countries_selected = st.sidebar.multiselect('What region do you want to analyze?', countries_regions.keys(),
+        countries_selected = form.multiselect('What region do you want to analyze?', countries_regions.keys(),
                                                     default='Southern Africa')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
@@ -28,7 +27,7 @@ def get_countries_choice(df_africa):
             aux_countries.extend(countries_regions[key])
         countries_selected = aux_countries
     else:
-        countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries,
+        countries_selected = form.multiselect('What countries do you want to analyze?', countries,
                                                     default='South Africa')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
@@ -41,9 +40,9 @@ def get_variants(df_africa):
     return df_africa['variant'].unique()
 
 
-def get_lineages_choice(df_africa):
+def get_lineages_choice(df_africa, form):
     variants = get_variants(df_africa)
-    lineages_selected = st.sidebar.multiselect("Select variants to show", variants,
+    lineages_selected = form.multiselect("Select variants to show", variants,
                                                default=sorted(variants))
     return lineages_selected
 
@@ -62,9 +61,9 @@ def get_dates(df_africa):
     return df_africa['date_2weeks'].unique()
 
 
-def get_dates_choice(df_africa):
+def get_dates_choice(df_africa, form):
     dates = get_dates(df_africa)
-    start_date, end_date = st.sidebar.select_slider("Select a range of time to show",
+    start_date, end_date = form.select_slider("Select a range of time to show",
                                                     options=sorted(dates),
                                                     value=(dates.min(),
                                                            dates.max()))
@@ -81,13 +80,13 @@ def build_variant_count_df(df_africa):
 
 
 @st.cache()
-def build_df_count_df(df_africa):
+def build_df_count(df_africa):
     return df_africa.groupby(['country', 'variant', 'date_2weeks']).size().reset_index(name='Count')
 
 
 @st.cache()
 def build_variant_percentage_df(df_count):
-    variants_percentage = df_count.groupby(['date_2weeks', 'variant']).agg({'Count': 'sum'})
+    variants_percentage = df_count.groupby(['date_2weeks', 'variant', 'country']).agg({'Count': 'sum'})
     variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
     variants_percentage = variants_percentage.reset_index()
     return variants_percentage
