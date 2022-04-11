@@ -11,7 +11,7 @@ import streamlit as st
 from utils.dicts import variant_names, variant_cutoffs, standardize_country_names
 from utils.functions import lineages_to_concerned_variants
 
-@st.cache(allow_output_mutation=True)
+# @st.cache(allow_output_mutation=True)
 def process_data_from_gisaid_api(last_update):
     if abs((datetime.today() - datetime.strptime(last_update, '%Y-%m-%d')).days) > 0:
         last_update = datetime.today().strftime('%Y-%m-%d')
@@ -106,8 +106,6 @@ def process_data_from_gisaid_api(last_update):
 
     # standardize country names
     df.replace({"country": standardize_country_names}, inplace=True)
-
-    df.to_csv("data/analyses/df_initial.csv")
     return df, last_update
 
 def process_data_from_gisaid_metadata():

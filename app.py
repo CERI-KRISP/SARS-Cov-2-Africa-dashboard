@@ -6,7 +6,6 @@ from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
 from source.graphs.countries_sequences import countries_with_sequences_chart
 from utils.data_process import *
-from streamlit import caching
 
 # Import Python Libraries
 import pandas as pd
