@@ -1,9 +1,4 @@
 # Import project packages
-import datetime
-
-import streamlit
-import pyautogui
-
 from config import *
 from source.pages import sidebar as sd
 from source.pages.header import *
@@ -16,7 +11,6 @@ from streamlit import caching
 # Import Python Libraries
 import pandas as pd
 from PIL import Image
-import os
 
 
 def main():
