@@ -2,6 +2,7 @@
 import datetime
 
 import streamlit
+import pyautogui
 
 from config import *
 from source.pages import sidebar as sd
@@ -10,11 +11,13 @@ from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
 from source.graphs.countries_sequences import countries_with_sequences_chart
 from utils.data_process import *
+from streamlit import caching
 
 # Import Python Libraries
 import pandas as pd
 from PIL import Image
 import os
+
 
 def main():
     st.set_page_config(
@@ -47,31 +50,36 @@ def main():
     st.sidebar.markdown(" ")
     st.sidebar.header("Filter data ")
 
+    ### Begin of filters
+
+    form = st.sidebar.form("Filters_form", clear_on_submit=True)
+
     # Filter data by countries
-    countries_choice, display_countries = sd.get_countries_choice(df_africa)
+    countries_choice, display_countries = sd.get_countries_choice(df_africa, form)
 
     # Sidebar filter lineages
-    lineages_choice = sd.get_lineages_choice(df_africa)
+    lineages_choice = sd.get_lineages_choice(df_africa, form)
 
     # Sidebar filter period
-    start_date, end_date = sd.get_dates_choice(df_africa)
+    start_date, end_date = sd.get_dates_choice(df_africa, form)
 
     ### Auxiliar dataframes ###
 
-    # Variant count dataframe
-    # variant_count = sd.build_variant_count_df(df_africa)
-
     # Couting variants
-    df_count = sd.build_df_count_df(df_africa)
+    df_count = sd.build_df_count(df_africa)
 
     # Building percentage dataframe
     variants_percentage = sd.build_variant_percentage_df(df_count)
 
-    # Button to call filtering function
-    if st.sidebar.button("Filter data"):
+    ### Filter and reset buttons ###
+    bt_col_1, bt_col_2 = form.columns(2)
+    bt_col_1.form_submit_button("Reset filters")
+
+    # # Button to call filtering function
+    if bt_col_2.form_submit_button("Filter data"):
         df_africa = sd.filter_df_africa(countries_choice, lineages_choice, start_date, end_date, df_africa)
         # variant_count = sd.build_variant_count_df(df_africa)
-        df_count = sd.build_df_count_df(df_africa)
+        df_count = sd.build_df_count(df_africa)
         variants_percentage = sd.build_variant_percentage_df(df_count)
 
     # Metrics
@@ -96,9 +104,21 @@ def main():
         'Metric',
         ('Number of genomes', 'Variant prevalence'))
     if map_option == 'Number of genomes':
-        colorpath_africa_map(df_count, column=c1)
+        colorpath_africa_map(df_count, column=c1, color_pallet="algae")
     elif map_option == 'Variant prevalence':
-        scatter_africa_map(df_count, column=c1)
+        # Multiselect to choose variants to show
+        voc_options = c1.multiselect("Choose VOCs to show", concerned_variants)
+        for voc in voc_options:
+            colorpath_africa_map(df_count, column=c1, color_pallet="algae")
+
+        # Deixando scatterplot de lado por enquanto
+        # variant_map_option = c1.radio("", ("Show all VOCs in the same map", "Choose VOC to show"))
+        # if variant_map_option == "Show all VOCs in the same map":
+        #     scatter_africa_map(variants_percentage, column=c1)
+        # elif variant_map_option == "Choose VOC to show":
+        #     voc_radio = c1.radio(concerned_variants)
+        #     # TODO: plotar colorpath map com variante escolhida
+        #     pass
 
     ############ Second column ###############
     ####### Circulating lineages CHART ###########
@@ -165,7 +185,6 @@ def main():
             eta_img = Image.open("data/figures/Eta-stanford.png")
             st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
 
+
 if __name__ == "__main__":
     main()
-
-

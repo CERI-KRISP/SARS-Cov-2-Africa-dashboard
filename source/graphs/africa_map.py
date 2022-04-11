@@ -11,6 +11,7 @@ import geopandas as gpd
 from utils.functions import *
 from utils.dicts import *
 
+
 @st.cache(allow_output_mutation=True)
 def map_data(df):
     # function to map countrys to country code and gets initial and final dates from the set
@@ -48,6 +49,7 @@ def map_data(df):
     df_map['date_2weeks'] = df_map['date_2weeks'].dt.strftime('%Y-%m-%d')
 
     return df_map, initial_date, final_date
+
 
 @st.cache(allow_output_mutation=True)
 def count_variants_per_country(df_map):
@@ -100,6 +102,7 @@ def insert_lat_long_columns(df):
     df["long"] = longitude
     return df
 
+
 @st.cache(allow_output_mutation=True)
 def map_synthetic_data_variant(df, initial_date, final_date):
     coloured_map = df
@@ -117,6 +120,7 @@ def map_synthetic_data_variant(df, initial_date, final_date):
     # changing datetime to str
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
     return coloured_map
+
 
 @st.cache(allow_output_mutation=True)
 def map_synthetic_data(df, initial_date, final_date):
@@ -163,8 +167,9 @@ def map_synthetic_data(df, initial_date, final_date):
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
     return coloured_map
 
+
 @st.cache(allow_output_mutation=True)
-def map_fill_na_values(df):
+def map_fill_na_values(df, map_count_column):
     coloured_map = df
     counts = []
     # converting to datetime format
@@ -173,21 +178,24 @@ def map_fill_na_values(df):
 
     for index, row in coloured_map.iterrows():
         min_date = min_country_dates['date_2weeks'].loc[min_country_dates['country'] == row['country']].min()
-        if (row['date_2weeks'] == min_date) and np.isnan(row['Count']) == True:
+        if (row['date_2weeks'] == min_date) and np.isnan(row[map_count_column]) == True:
             counts.append(0)
         else:
-            counts.append(row['Count'])
-    coloured_map['Count'] = counts
+            counts.append(row[map_count_column])
+    coloured_map[map_count_column] = counts
     coloured_map_aux = coloured_map.sort_values(by=['country', 'date_2weeks'])
-    coloured_map_aux['Count'] = coloured_map_aux['Count'].fillna(method='ffill')
+    coloured_map_aux[map_count_column] = coloured_map_aux[map_count_column].fillna(method='ffill')
     coloured_map = coloured_map_aux.sort_values(by='date_2weeks')
     # changing datetime to str
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
+
+    #dropping NA dates
+    coloured_map.dropna(subset=['date_2weeks'], inplace=True)
     return coloured_map
 
 
 # TODO: Map to show number of cumulative genomes in total
-def colorpath_africa_map(df_africa, column):
+def colorpath_africa_map(df_africa, column, color_pallet):
     # df_africa is a dataframe with the number for each variant per country and per day
     c = column
     # gdf = gpd.read_file('data/africa.geojson')
@@ -217,7 +225,7 @@ def colorpath_africa_map(df_africa, column):
         fig_map = px.choropleth(df_map,
                                 locations='sov_a3', color='cum_counts',
                                 hover_name='country', animation_frame="date_2weeks",
-                                color_continuous_scale="algae",
+                                color_continuous_scale=color_pallet,
                                 range_color=[0, max(df_map['cum_counts'])],
                                 labels={'cum_counts': 'Number of genomes', 'date_2weeks': 'Date'},
                                 custom_data=['country', 'cum_counts', 'date_2weeks'],
@@ -252,9 +260,11 @@ def colorpath_africa_map(df_africa, column):
         c.plotly_chart(fig_map2, use_container_width=True)
 
 
+# TODO: refatorar esse mapa com aprendizados do mapa acima
 def scatter_africa_map(df_africa, column):
     c = column
     coloured_map, initial_date, final_date = map_data(df_africa)
+
     map_count_column = 'percentage'
     countries = coloured_map['sov_a3'].unique()
     # TODO: colorir paises selecionados
@@ -264,14 +274,13 @@ def scatter_africa_map(df_africa, column):
         coloured_map = map_synthetic_data_variant(coloured_map, initial_date, final_date)
 
         # Filling NA values
-        coloured_map = map_fill_na_values(coloured_map)
+        coloured_map = map_fill_na_values(coloured_map, map_count_column)
 
         if coloured_map[map_count_column].empty:
             c.warning("No data to show for this lineage.")
             fig_map = px.line_geo(lat=[0, 0, 0, 0], lon=[0, 0, 0, 0])
         else:
             # c1.write(coloured_map)
-            coloured_map['variants'] = coloured_map['variant']
             c.subheader("Genomes per lineage")
 
             ### variants legend
@@ -279,14 +288,14 @@ def scatter_africa_map(df_africa, column):
             legend_box.write(custom_legend(concerned_variants, main_lineages_color_scheme, c))
 
             fig_map = px.scatter_geo(coloured_map, locations='sov_a3', hover_name='country',
-                                     hover_data=['variant', 'counts', 'percentage'],
-                                     labels={'pangolin_africa': 'Lineage', 'counts': 'Total of Genomes (absolute)',
-                                             'percentage': 'Total of Genomes (%)', 'date2': 'Date'},
-                                     animation_frame="date_2weeks", size='counts', animation_group='country',
-                                     color='variants', size_max=100,
-                                     color_discrete_map=main_lineages_color_scheme)
+                                     hover_data=['variant', map_count_column],
+                                     labels={'percentage': 'Percentage of genomes', 'date_2weeks': 'Date'},
+                                     animation_frame="date_2weeks", size=map_count_column, animation_group='country',
+                                     color='variant', size_max=100,
+                                     color_discrete_map=main_lineages_color_scheme
+                                     )
             fig_map.update_traces(marker=dict(
-                size=coloured_map['counts'],
+                size=coloured_map[map_count_column],
                 line_width=5,
                 sizeref=1,
                 sizemode="area",
