@@ -21,19 +21,21 @@ def map_data(df):
     df['country'] = df['country'].str.rstrip()
     # Reading Africa map and joing with africa_df information
     gdf = gpd.read_file('data/africa.geojson')
+    gdf.drop(columns=['created_at', 'updated_at'])
+
     df_map = gdf.merge(df, left_on="sovereignt", right_on="country", how="outer")
     df_map = df_map[
-        ['date_2weeks', 'country', 'variant', 'sovereignt', 'sov_a3', 'Count']]
+        ['date_2weeks', 'country', 'variant', 'sovereignt', 'Count', 'sov_a3']]
 
     # filling missing country codes
-    df_map['sov_a3'] = df_map['sov_a3'].astype(str)
-    temp_codes = []
-    for index, row in df_map.iterrows():
-        if row['sov_a3'] == 'nan':
-            temp_codes.append(missing_country_codes[row['country']])
-        else:
-            temp_codes.append(row['sov_a3'])
-    df_map['sov_a3'] = temp_codes
+    # df_map['sov_a3'] = df_map['sov_a3'].astype(str)
+    # temp_codes = []
+    # for index, row in df_map.iterrows():
+    #     if row['sov_a3'] == 'nan':
+    #         temp_codes.append(missing_country_codes[row['country']])
+    #     else:
+    #         temp_codes.append(row['sov_a3'])
+    # df_map['sov_a3'] = temp_codes
     # TODO: write test to check if doesn't have any empty value in sov_a3 column
 
     df_map['date_2weeks'] = pd.to_datetime(df_map['date_2weeks'], errors='coerce', format='%Y-%m-%d', yearfirst=True)
@@ -161,7 +163,7 @@ def map_synthetic_data(df, initial_date, final_date):
     coloured_map = coloured_map.append(new_data)
 
     # Drop NA values
-    coloured_map.dropna(subset=['country', 'date_2weeks'], inplace=True)
+    coloured_map.dropna(subset=['sov_a3', 'date_2weeks'], inplace=True)
 
     # changing datetime to str
     coloured_map['date_2weeks'] = coloured_map['date_2weeks'].dt.strftime('%Y-%m-%d')
@@ -198,9 +200,11 @@ def map_fill_na_values(df, map_count_column):
 def colorpath_africa_map(df_africa, column, color_pallet):
     # df_africa is a dataframe with the number for each variant per country and per day
     c = column
-    # gdf = gpd.read_file('data/africa.geojson')
+    with open('data/africa.geojson') as f:
+        africa_geojson = json.load(f)
 
     df_map, initial_date, final_date = map_data(df_africa)
+    c.write(df_map.country.unique())
 
     # adding synthetic data to fill date gaps
     df_map = map_synthetic_data(df_map, initial_date, final_date)
@@ -222,8 +226,10 @@ def colorpath_africa_map(df_africa, column, color_pallet):
     with st.container():
         # Figure title
         # c.markdown("##### Cumulative genomes produced since {}".format(initial_date))
+        c.caption("Showing cumulative numbers")
         fig_map = px.choropleth(df_map,
-                                locations='sov_a3', color='cum_counts',
+                                locations='country', geojson=africa_geojson, featureidkey="properties.sovereignt",
+                                color='cum_counts',
                                 hover_name='country', animation_frame="date_2weeks",
                                 color_continuous_scale=color_pallet,
                                 range_color=[0, max(df_map['cum_counts'])],
@@ -231,7 +237,7 @@ def colorpath_africa_map(df_africa, column, color_pallet):
                                 custom_data=['country', 'cum_counts', 'date_2weeks'],
                                 title="Cumulative genomes produced since {}".format(initial_date)
                                 )
-        fig_map.update_layout(geo_scope="africa")
+        fig_map.update_layout(geo_scope="africa", geo_resolution=50)
         fig_map.update_geos(visible=False, showcoastlines=True, showcountries=True, showlakes=True, showland=True,
                             showrivers=True, showsubunits=True, subunitcolor='#3E8989')
         fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
@@ -261,21 +267,21 @@ def colorpath_africa_map(df_africa, column, color_pallet):
 
 
 # TODO: refatorar esse mapa com aprendizados do mapa acima
-def scatter_africa_map(df_africa, column):
+def scatter_africa_map(df_africa, column, map_count_column):
     c = column
     coloured_map, initial_date, final_date = map_data(df_africa)
+    c.write(coloured_map[coloured_map['variant'] == 'Delta'])
 
-    map_count_column = 'percentage'
+    # Building synthetic data to set initial and end date for dataframe
+    coloured_map = map_synthetic_data_variant(coloured_map, initial_date, final_date)
+
+    # Filling NA values
+    coloured_map = map_fill_na_values(coloured_map, map_count_column)
+
     countries = coloured_map['sov_a3'].unique()
     # TODO: colorir paises selecionados
 
     with st.container():
-        # Building synthetic data to set initial and end date for dataframe
-        coloured_map = map_synthetic_data_variant(coloured_map, initial_date, final_date)
-
-        # Filling NA values
-        coloured_map = map_fill_na_values(coloured_map, map_count_column)
-
         if coloured_map[map_count_column].empty:
             c.warning("No data to show for this lineage.")
             fig_map = px.line_geo(lat=[0, 0, 0, 0], lon=[0, 0, 0, 0])

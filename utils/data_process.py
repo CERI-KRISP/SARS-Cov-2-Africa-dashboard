@@ -103,9 +103,11 @@ def process_data_from_gisaid_api(last_update):
 
     df['drop_decision'] = np.where((df['collection_date'] < df['voc_earliest_sample_date']), 'yes', 'no')
     df.drop(df[df['drop_decision'] == 'yes'].index, inplace=True)
+    df.drop(['drop_decision'], axis=1, inplace=True)
 
     # standardize country names
     df.replace({"country": standardize_country_names}, inplace=True)
+    # df.to_csv("data/analyses/africa_dashboard_11_04_2022.csv", index=False)
     return df, last_update
 
 def process_data_from_gisaid_metadata():

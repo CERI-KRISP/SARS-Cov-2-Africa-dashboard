@@ -92,26 +92,22 @@ def main():
 
     ############ First column ###############
     ############## MAP CHART ################
-    c1.subheader("Continent map")
+    c1.subheader("Genomes per country")
     map_option = c1.selectbox(
         'Metric',
-        ('Number of genomes', 'Variant prevalence'))
-    if map_option == 'Number of genomes':
+        ('Total of genomes', 'Genomes by variant', 'Variants proportion'))
+    if map_option == 'Total of genomes':
         colorpath_africa_map(df_count, column=c1, color_pallet="algae")
-    elif map_option == 'Variant prevalence':
+    elif map_option == 'Genomes by variant':
         # Multiselect to choose variants to show
-        voc_options = c1.multiselect("Choose VOCs to show", concerned_variants)
-        for voc in voc_options:
-            colorpath_africa_map(df_count, column=c1, color_pallet="algae")
+        voc_selected = c1.selectbox("Choose VOC to show", concerned_variants)
 
+        df_count_map = sd.build_df_count(df_africa[df_africa['variant'] == voc_selected])
+        colorpath_africa_map(df_count_map, column=c1, color_pallet=vocs_color_pallet.get(voc_selected))
+    elif map_option == 'Variants proportion':
         # Deixando scatterplot de lado por enquanto
-        # variant_map_option = c1.radio("", ("Show all VOCs in the same map", "Choose VOC to show"))
-        # if variant_map_option == "Show all VOCs in the same map":
-        #     scatter_africa_map(variants_percentage, column=c1)
-        # elif variant_map_option == "Choose VOC to show":
-        #     voc_radio = c1.radio(concerned_variants)
-        #     # TODO: plotar colorpath map com variante escolhida
-        #     pass
+        c1.write(variants_percentage.head())
+        scatter_africa_map(variants_percentage, column=c1, map_count_column='Count')
 
     ############ Second column ###############
     ####### Circulating lineages CHART ###########

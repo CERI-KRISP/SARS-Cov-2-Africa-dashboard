@@ -59,18 +59,20 @@ standardize_country_names = {'Republic of Burundi': 'Burundi', 'Republic of Came
                              'Republic of Zambia': 'Zambia', 'Republic of Zimbabwe': 'Zimbabwe',
                              'Republic of Benin': 'Benin', 'Cape Verde': 'Cabo Verde',
                              'Republic of Cabo Verde': 'Cabo Verde',
-                             'Republic of Côte d\'Ivoire': 'Côte d\'Ivoire', 'Republic of Gambia': 'Gambia',
+                             'Republic of Côte d\'Ivoire': 'Cote d\'Ivoire', 'Ivory Coast': 'Cote d\'Ivoire',
+                             'Republic of Gambia': 'Gambia',
                              'Republic of Ghana': 'Ghana', 'Republic of Guinea': 'Guinea',
                              'Republic of Guinea-Bissau': 'Guinea-Bissau', 'Republic of Liberia': 'Liberia',
                              'Republic of Mali': 'Mali',
                              'Republic of Niger': 'Niger', 'Federal Republic of Nigeria': 'Nigeria',
                              'Republic of Senegal': 'Senegal',
                              'Republic of Sierra Leone': 'Sierra Leone', 'Togolese': 'Togo',
-                             'Togolese Republic': 'Togo'}
+                             'Togolese Republic': 'Togo', 'La Reunion': 'Reunion',
+                             'DR Congo': 'Democratic Republic of the Congo', 'Congo':'Republic of the Congo'}
 
 ###### Dictionary to select countries per region ####
 countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African Republic', 'Chad',
-                                        'Republic of Congo', 'Democratic Republic of Congo',
+                                        'Republic of the Congo', 'Democratic Republic of the Congo',
                                         'Equatorial Guinea', 'Gabon', 'São Tomé and Principe'},
                      'Eastern Africa': {'Comoros', 'Djibouti', 'Eritrea', 'Ethiopia', 'Kenya', 'Madagascar',
                                         'Mauritius', 'Rwanda', 'Seychelles', 'Somalia', 'Sudan', 'South Sudan',
@@ -87,3 +89,6 @@ countries_regions = {'Central Africa': {'Burundi', 'Cameroon', 'Central African 
 missing_country_codes = {'Guinea-Bissau': 'GNB', 'Mauritius': 'MUS', 'Republic of the Congo': 'COG', 'Reunion': 'REU',
                          'Seychelles': 'SYC', 'Mayotte': 'MYT', 'Cabo Verde': 'CPV', "Cote d'Ivoire": 'CIV',
                          'Eswatini': 'SWZ', 'Tanzania': 'TZA', 'South Sudan': 'SSD'}
+
+vocs_color_pallet = {'Alpha': 'Greys', 'Beta': 'YlOrBr', 'Gamma': 'Oranges', 'Delta': 'algae', 'Omicron': 'RdPu',
+                     'Other Lineages': 'Blues'}
