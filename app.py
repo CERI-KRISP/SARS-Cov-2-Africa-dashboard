@@ -45,16 +45,16 @@ def main():
 
     ### Begin of filters
 
-    form = st.sidebar.form("Filters_form", clear_on_submit=True)
+    # form = st.sidebar.form("Filters_form", clear_on_submit=True)
 
     # Filter data by countries
-    countries_choice, display_countries = sd.get_countries_choice(df_africa, form)
+    countries_choice, display_countries = sd.get_countries_choice(df_africa)
 
     # Sidebar filter lineages
-    lineages_choice = sd.get_lineages_choice(df_africa, form)
+    lineages_choice = sd.get_lineages_choice(df_africa)
 
     # Sidebar filter period
-    start_date, end_date = sd.get_dates_choice(df_africa, form)
+    start_date, end_date = sd.get_dates_choice(df_africa)
 
     ### Auxiliar dataframes ###
 
@@ -65,15 +65,15 @@ def main():
     variants_percentage = sd.build_variant_percentage_df(df_count)
 
     ### Filter and reset buttons ###
-    bt_col_1, bt_col_2 = form.columns(2)
-    bt_col_1.form_submit_button("Reset filters")
-
+    bt_col_1, bt_col_2 = st.sidebar.columns(2)
+    if bt_col_1.button("Reset filters", key='button_reset_filters'):
+        sd.reset_filters(df_africa)
     # # Button to call filtering function
-    if bt_col_2.form_submit_button("Filter data"):
+    if bt_col_2.button("Filter data", key='button_filter', on_click=sd.filter_df_africa):
         df_africa = sd.filter_df_africa(countries_choice, lineages_choice, start_date, end_date, df_africa)
-        # variant_count = sd.build_variant_count_df(df_africa)
-        df_count = sd.build_df_count(df_africa)
-        variants_percentage = sd.build_variant_percentage_df(df_count)
+        # # variant_count = sd.build_variant_count_df(df_africa)
+        # df_count = sd.build_df_count(df_africa)
+        # variants_percentage = sd.build_variant_percentage_df(df_count)
 
     # Metrics
     sd.show_metrics(df_africa)
@@ -89,6 +89,7 @@ def main():
 
     ### Layout of main page
     c1, c2 = st.columns((1.5, 1.9))
+    st.write(st.session_state)
 
     ############ First column ###############
     ############## MAP CHART ################
@@ -101,7 +102,6 @@ def main():
     elif map_option == 'Genomes by variant':
         # Multiselect to choose variants to show
         voc_selected = c1.selectbox("Choose VOC to show", concerned_variants)
-
         df_count_map = sd.build_df_count(df_africa[df_africa['variant'] == voc_selected])
         colorpath_africa_map(df_count_map, column=c1, color_pallet=vocs_color_pallet.get(voc_selected))
     elif map_option == 'Variants proportion':

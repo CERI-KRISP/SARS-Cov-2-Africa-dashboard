@@ -1,34 +1,36 @@
 import streamlit as st
 import pandas as pd
+from streamlit import caching
 
-from utils.dicts import countries_regions
+from utils.dicts import countries_regions, concerned_variants
 from utils.functions import get_img_with_href
+
 
 @st.cache()
 def get_countries(df_africa):
     return df_africa['country'].unique()
 
 
-def get_countries_choice(df_africa, form):
+def get_countries_choice(df_africa):
     # Filter by selected country
     countries = get_countries(df_africa)
-    selection = form.radio("Select Countries to show", ("Show all countries", "Select region",
-                                                              "Select one or more countries"))
+    selection = st.sidebar.radio("Select Countries to show", ("Show all countries", "Select region",
+                                                              "Select one or more countries"), key='radio_country')
     if selection == "Show all countries":
         countries_selected = countries
         display_countries = "all countries in Africa continent"
     elif selection == "Select region":
         aux_countries = []
-        countries_selected = form.multiselect('What region do you want to analyze?', countries_regions.keys(),
-                                                    default='Southern Africa')
+        countries_selected = st.sidebar.multiselect('What region do you want to analyze?', countries_regions.keys(),
+                                                    default='Southern Africa', key='multiselect_regions')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
         for key in countries_selected:
             aux_countries.extend(countries_regions[key])
         countries_selected = aux_countries
     else:
-        countries_selected = form.multiselect('What countries do you want to analyze?', countries,
-                                                    default='South Africa')
+        countries_selected = st.sidebar.multiselect('What countries do you want to analyze?', countries,
+                                                    default='South Africa', key='multiselect_countries')
         display_countries = " and ".join([", ".join(countries_selected[:-1]), countries_selected[-1]] if len(
             countries_selected) > 2 else countries_selected)
 
@@ -40,10 +42,10 @@ def get_variants(df_africa):
     return df_africa['variant'].unique()
 
 
-def get_lineages_choice(df_africa, form):
+def get_lineages_choice(df_africa):
     variants = get_variants(df_africa)
-    lineages_selected = form.multiselect("Select variants to show", variants,
-                                               default=sorted(variants))
+    lineages_selected = st.sidebar.multiselect("Select variants to show", variants,
+                                               default=sorted(variants), key='multiselect_variants')
     return lineages_selected
 
 
@@ -61,12 +63,12 @@ def get_dates(df_africa):
     return df_africa['date_2weeks'].unique()
 
 
-def get_dates_choice(df_africa, form):
+def get_dates_choice(df_africa):
     dates = get_dates(df_africa)
-    start_date, end_date = form.select_slider("Select a range of time to show",
+    start_date, end_date = st.sidebar.select_slider("Select a range of time to show",
                                                     options=sorted(dates),
                                                     value=(dates.min(),
-                                                           dates.max()))
+                                                           dates.max()), key='select_slider_dates')
     return start_date, end_date
 
 
@@ -90,6 +92,35 @@ def build_variant_percentage_df(df_count):
     variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
     variants_percentage = variants_percentage.reset_index()
     return variants_percentage
+
+
+def reset_filters(df):
+    # Countries filters
+    if 'multiselect_regions' in st.session_state.keys():
+        del st.session_state.multiselect_regions
+
+    if 'multiselect_countries' in st.session_state.keys():
+        del st.session_state.multiselect_countries
+
+    del st.session_state['radio_country']
+    st.session_state.radio_country = 'Show all countries'
+
+    # Variants filter
+    if 'multiselect_variant' in st.session_state.keys():
+        del st.session_state['multiselect_variant']
+        st.session_state.multiselect_variant = concerned_variants
+
+    # Date selection
+    all_dates = get_dates(df_africa=df)
+    start_date = min(all_dates)
+    end_date = max(all_dates)
+
+    del st.session_state['select_slider_dates']
+    st.session_state.select_slider_dates = [start_date, end_date]
+
+    caching.clear_memo_cache()
+    caching.clear_singleton_cache()
+    st.experimental_rerun()
 
 
 @st.cache()

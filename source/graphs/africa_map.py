@@ -204,7 +204,6 @@ def colorpath_africa_map(df_africa, column, color_pallet):
         africa_geojson = json.load(f)
 
     df_map, initial_date, final_date = map_data(df_africa)
-    c.write(df_map.country.unique())
 
     # adding synthetic data to fill date gaps
     df_map = map_synthetic_data(df_map, initial_date, final_date)
