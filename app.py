@@ -4,7 +4,7 @@ from source.pages import sidebar as sd
 from source.pages.header import *
 from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
-from source.graphs.countries_sequences import countries_with_sequences_chart
+from source.graphs.countries_sequences import countries_with_sequences_chart, countries_with_sequences_chart_one_variant
 from utils.data_process import *
 
 # Import Python Libraries
@@ -129,51 +129,55 @@ def main():
         with c1_2.expander("Alpha variant"):
             alpha_img = Image.open("data/figures/alpha-stanford-3-1536x226.png")
             st.image(alpha_img, caption="SARS_CoV2 Alpha variant sequence")
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Alpha', start_date=start_date)
 
     with c2_2.container():
         with c2_2.expander("Beta variant"):
             beta_img = Image.open("data/figures/Beta-stanford.png")
             st.image(beta_img, caption="SARS_CoV2 Beta variant sequence")
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Beta', start_date=start_date)
 
     with c1_2.container():
         with c1_2.expander("Delta variant"):
             delta_img = Image.open("data/figures/Delta-stanford.png")
             st.image(delta_img, caption="SARS_CoV2 Delta variant sequence")
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Delta', start_date=start_date)
 
     with c2_2.container():
         with c2_2.expander("Omicron variant"):
             omicron_img = Image.open("data/figures/omicron-stanford.png")
             st.image(omicron_img, caption="SARS_CoV2 Omicron variant sequence")
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Omicron', start_date=start_date)
 
-    with c1_2.container():
-        with c1_2.expander("A.23.1 variant"):
-            a231_img = Image.open("data/figures/a231-stanford.png")
-            st.image(a231_img, caption="SARS_CoV2 A.23.1 variant sequence")
-
-    with c2_2.container():
-        with c2_2.expander("B.1.1.318 variant"):
-            b11318_img = Image.open("data/figures/b11318-stanford.png")
-            st.image(b11318_img, caption="SARS_CoV2 B.1.1.318 variant sequence")
-
-    with c1_2.container():
-        with c1_2.expander("C.1 variant"):
-            c1_img = Image.open("data/figures/c1-stanford.png")
-            st.image(c1_img, caption="SARS_CoV2 C.1 variant sequence")
-
-    with c2_2.container():
-        with c2_2.expander("C.1.2 variant"):
-            c12_img = Image.open("data/figures/c12-stanford.png")
-            st.image(c12_img, caption="SARS_CoV2 C.1.2 variant sequence")
-
-    with c1_2.container():
-        with c1_2.expander("C.36.3 variant"):
-            c363_img = Image.open("data/figures/c.36.3-stanford.png")
-            st.image(c363_img, caption="SARS_CoV2 C.36.3 variant sequence")
-
-    with c2_2.container():
-        with c2_2.expander("Eta variant"):
-            eta_img = Image.open("data/figures/Eta-stanford.png")
-            st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
+    # with c1_2.container():
+    #     with c1_2.expander("A.23.1 variant"):
+    #         a231_img = Image.open("data/figures/a231-stanford.png")
+    #         st.image(a231_img, caption="SARS_CoV2 A.23.1 variant sequence")
+    #
+    # with c2_2.container():
+    #     with c2_2.expander("B.1.1.318 variant"):
+    #         b11318_img = Image.open("data/figures/b11318-stanford.png")
+    #         st.image(b11318_img, caption="SARS_CoV2 B.1.1.318 variant sequence")
+    #
+    # with c1_2.container():
+    #     with c1_2.expander("C.1 variant"):
+    #         c1_img = Image.open("data/figures/c1-stanford.png")
+    #         st.image(c1_img, caption="SARS_CoV2 C.1 variant sequence")
+    #
+    # with c2_2.container():
+    #     with c2_2.expander("C.1.2 variant"):
+    #         c12_img = Image.open("data/figures/c12-stanford.png")
+    #         st.image(c12_img, caption="SARS_CoV2 C.1.2 variant sequence")
+    #
+    # with c1_2.container():
+    #     with c1_2.expander("C.36.3 variant"):
+    #         c363_img = Image.open("data/figures/c.36.3-stanford.png")
+    #         st.image(c363_img, caption="SARS_CoV2 C.36.3 variant sequence")
+    #
+    # with c2_2.container():
+    #     with c2_2.expander("Eta variant"):
+    #         eta_img = Image.open("data/figures/Eta-stanford.png")
+    #         st.image(eta_img, caption="SARS_CoV2 Eta variant sequence")
 
 
 if __name__ == "__main__":
