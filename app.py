@@ -68,12 +68,13 @@ def main():
     bt_col_1, bt_col_2 = st.sidebar.columns(2)
     if bt_col_1.button("Reset filters", key='button_reset_filters'):
         sd.reset_filters(df_africa)
+
     # # Button to call filtering function
-    if bt_col_2.button("Filter data", key='button_filter', on_click=sd.filter_df_africa):
+    if bt_col_2.button("Filter data", key='button_filter'):
         df_africa = sd.filter_df_africa(countries_choice, lineages_choice, start_date, end_date, df_africa)
-        # # variant_count = sd.build_variant_count_df(df_africa)
-        # df_count = sd.build_df_count(df_africa)
-        # variants_percentage = sd.build_variant_percentage_df(df_count)
+        variant_count = sd.build_variant_count_df(df_africa)
+        df_count = sd.build_df_count(df_africa)
+        variants_percentage = sd.build_variant_percentage_df(df_count)
 
     # Metrics
     sd.show_metrics(df_africa)
@@ -89,14 +90,15 @@ def main():
 
     ### Layout of main page
     c1, c2 = st.columns((1.5, 1.9))
-    st.write(st.session_state)
 
     ############ First column ###############
     ############## MAP CHART ################
     c1.subheader("Genomes per country")
     map_option = c1.selectbox(
         'Metric',
-        ('Total of genomes', 'Genomes by variant', 'Variants proportion'))
+        ('Total of genomes', 'Genomes by variant'
+         # 'Variants proportion'
+         ))
     if map_option == 'Total of genomes':
         colorpath_africa_map(df_count, column=c1, color_pallet="algae")
     elif map_option == 'Genomes by variant':
@@ -104,10 +106,9 @@ def main():
         voc_selected = c1.selectbox("Choose VOC to show", concerned_variants)
         df_count_map = sd.build_df_count(df_africa[df_africa['variant'] == voc_selected])
         colorpath_africa_map(df_count_map, column=c1, color_pallet=vocs_color_pallet.get(voc_selected))
-    elif map_option == 'Variants proportion':
-        # Deixando scatterplot de lado por enquanto
-        c1.write(variants_percentage.head())
-        scatter_africa_map(variants_percentage, column=c1, map_count_column='Count')
+    # elif map_option == 'Variants proportion':
+    #     c1.write(variants_percentage.head())
+    #     scatter_africa_map(variants_percentage, column=c1, map_count_column='Count')
 
     ############ Second column ###############
     ####### Circulating lineages CHART ###########

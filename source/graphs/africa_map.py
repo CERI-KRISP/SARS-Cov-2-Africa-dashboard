@@ -269,7 +269,6 @@ def colorpath_africa_map(df_africa, column, color_pallet):
 def scatter_africa_map(df_africa, column, map_count_column):
     c = column
     coloured_map, initial_date, final_date = map_data(df_africa)
-    c.write(coloured_map[coloured_map['variant'] == 'Delta'])
 
     # Building synthetic data to set initial and end date for dataframe
     coloured_map = map_synthetic_data_variant(coloured_map, initial_date, final_date)
@@ -279,6 +278,9 @@ def scatter_africa_map(df_africa, column, map_count_column):
 
     countries = coloured_map['sov_a3'].unique()
     # TODO: colorir paises selecionados
+
+    with open('data/africa.geojson') as f:
+        africa_geojson = json.load(f)
 
     with st.container():
         if coloured_map[map_count_column].empty:
@@ -292,7 +294,8 @@ def scatter_africa_map(df_africa, column, map_count_column):
             legend_box = st.container()
             legend_box.write(custom_legend(concerned_variants, main_lineages_color_scheme, c))
 
-            fig_map = px.scatter_geo(coloured_map, locations='sov_a3', hover_name='country',
+            fig_map = px.scatter_geo(coloured_map, locations='country', geojson=africa_geojson,
+                                     featureidkey="properties.sovereignt", hover_name='country',
                                      hover_data=['variant', map_count_column],
                                      labels={'percentage': 'Percentage of genomes', 'date_2weeks': 'Date'},
                                      animation_frame="date_2weeks", size=map_count_column, animation_group='country',

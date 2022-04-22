@@ -26,7 +26,11 @@ variant_names = {'B.1.1.7': 'Alpha', 'B.1.1.7 (Alpha)': 'Alpha',
                  'B.1.617.2/AY.x': 'Delta', 'B.1.617.2': 'Delta', 'B.1.617.2/AY.x (Delta)': 'Delta',
                  'VOC Delta GK (B.1.617.2+AY.*) first detected in India': 'Delta',
                  'B.1.525 (Eta)': 'B.1.525', 'B.1.1.529 (Omicron)': 'Omicron',
-                 'B.1.1.529': 'Omicron', 'BA.1': 'Omicron', 'BA.1.1': 'Omicron', 'BA.2': 'Omicron', 'BA.3': 'Omicron',
+                 'B.1.1.529': 'Omicron', 'BA.1': 'Omicron', 'BA.1.1': 'Omicron',
+                 'BA.1.1.11': 'Omicron', 'BA.1.15': 'Omicron',
+                 'BA.2': 'Omicron', 'BA.3': 'Omicron', 'BA.1.1.1': 'Omicron', 'BA.1.1.4': 'Omicron', 'BA.1.1.6': 'Omicron',
+                 'BA.1.1.9': 'Omicron', 'BA.1.17.2': 'Omicron', 'BA.1.18': 'Omicron', 'BA.1.14': 'Omicron',
+                 'BA.1.13': 'Omicron', 'BA.1.17': 'Omicron', 'BA.1.1.14': 'Omicron', 'BA.1.16': 'Omicron',
                  'VOC Omicron GRA (B.1.1.529+BA.*) first detected in Botswana/Hong Kong/South Africa': 'Omicron'}
 
 # Concerned variants based on WHO Feb 16

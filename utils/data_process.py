@@ -107,7 +107,7 @@ def process_data_from_gisaid_api(last_update):
 
     # standardize country names
     df.replace({"country": standardize_country_names}, inplace=True)
-    # df.to_csv("data/analyses/africa_dashboard_11_04_2022.csv", index=False)
+    df.to_csv("data/analyses/africa_dashboard_22_04_2022.csv", index=False)
     return df, last_update
 
 def process_data_from_gisaid_metadata():
