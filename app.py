@@ -37,7 +37,7 @@ def main():
 
     ## Add sidebar to the app
     st.sidebar.title("GENOMICS AFRICA")
-    st.sidebar.subheader("Results Updated – %s" % last_update)
+    st.sidebar.subheader("Last update: %s" % last_update)
 
     # Sidebar filter data
     st.sidebar.markdown(" ")
@@ -82,8 +82,8 @@ def main():
     # End of sidebar
     st.sidebar.header("About")
     sd.about_section()
-    st.sidebar.header("Acknowledgment")
-    sd.acknowledgment_section(logo_path='img/gisaid_logo.png', link='https://www.gisaid.org/')
+    # st.sidebar.header("Acknowledgment")
+    # sd.acknowledgment_section(logo_path='img/gisaid_logo.png', link='https://www.gisaid.org/')
 
     # Add title and subtitle to the main interface of the app
     main_title(display_countries)
