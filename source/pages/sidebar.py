@@ -6,7 +6,7 @@ from utils.dicts import countries_regions, concerned_variants
 from utils.functions import get_img_with_href
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def get_countries(df_africa):
     return df_africa['country'].unique()
 
@@ -37,7 +37,7 @@ def get_countries_choice(df_africa):
     return countries_selected, display_countries
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def get_variants(df_africa):
     return df_africa['variant'].unique()
 
@@ -49,7 +49,7 @@ def get_lineages_choice(df_africa):
     return lineages_selected
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def get_dates(df_africa):
     # TODO: instead of dropna, check if there is information on colention date
     df_africa.dropna(subset=['date_2weeks'], inplace=True)
@@ -72,7 +72,7 @@ def get_dates_choice(df_africa):
     return start_date, end_date
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def build_variant_count_df(df_africa):
     # Building variant data frame
     variant_count = pd.DataFrame(df_africa.variant)
@@ -81,15 +81,16 @@ def build_variant_count_df(df_africa):
     return variant_count
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def build_df_count(df_africa):
     return df_africa.groupby(['country', 'variant', 'date_2weeks']).size().reset_index(name='Count')
 
 
-@st.cache()
+@st.cache(allow_output_mutation=True)
 def build_variant_percentage_df(df_count):
-    variants_percentage = df_count.groupby(['date_2weeks', 'variant', 'country']).agg({'Count': 'sum'})
-    variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum()))
+    variants_percentage = df_count.groupby(['date_2weeks', 'variant']).agg({'Count': 'sum'})
+    variants_percentage = variants_percentage.groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).sort_values(by='Count',
+                                                                                                         ascending=False)
     variants_percentage = variants_percentage.reset_index()
     return variants_percentage
 

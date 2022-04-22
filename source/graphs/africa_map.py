@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 import streamlit as st
 import numpy as np
@@ -216,11 +217,8 @@ def colorpath_africa_map(df_africa, column, color_pallet):
     df_map['cum_counts'] = df_map[['country', 'Count']].groupby('country').cumsum()
 
     # Building hover text
-    temp_text = []
-    for index, row in df_map.iterrows():
-        temp_text.append('<b>{}</b> <br><br>{:.0f} genomes <br> from {} to {}'.format(row['country'], row['cum_counts'],
-                                                                                      initial_date, row['date_2weeks']))
-    df_map['hover_text'] = temp_text
+    # Column date initial
+    df_map['date_initial'] = initial_date
 
     with st.container():
         # Figure title
@@ -233,7 +231,7 @@ def colorpath_africa_map(df_africa, column, color_pallet):
                                 color_continuous_scale=color_pallet,
                                 range_color=[0, max(df_map['cum_counts'])],
                                 labels={'cum_counts': 'Number of genomes', 'date_2weeks': 'Date'},
-                                custom_data=['country', 'cum_counts', 'date_2weeks'],
+                                custom_data=['country', 'cum_counts', 'date_initial', 'date_2weeks'],
                                 title="Cumulative genomes produced since {}".format(initial_date)
                                 )
         fig_map.update_layout(geo_scope="africa", geo_resolution=50)
@@ -246,8 +244,8 @@ def colorpath_africa_map(df_africa, column, color_pallet):
 
         # creating standardize hover template
         custom_hovertemplate = '<b>%{customdata[0]} </b><br><br>' + \
-                               '%{customdata[1]} genomes <br>from 2020-01-15' + \
-                               ' to %{customdata[2]}<br>'
+                               '%{customdata[1]} genomes <br>from %{customdata[2]}' + \
+                               ' to %{customdata[3]}<br>'
 
         fig_map.update_traces(hovertemplate=custom_hovertemplate)
         for frame in fig_map.frames:
