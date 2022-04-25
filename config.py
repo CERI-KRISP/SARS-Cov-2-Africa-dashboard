@@ -14,7 +14,7 @@ GISAID_PASSWORD = 'vWXSlf3SqLSa'
 css_changes = """
 <style>
 #MainMenu {
-    visibility:hidden;
+    visibility:visible;
     }
 footer{
     visibility:visible;
