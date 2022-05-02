@@ -14,9 +14,9 @@ def variants_bar_plot(variants_percentage, column):
 
     with st.container():
         c.subheader("Circulating lineages and variants")
-        fig = px.bar(variants_percentage, x='date_2weeks', y='Count',
+        fig = px.bar(variants_percentage.sort_values(by='variant', ascending=True), x='date_2weeks', y='Count',
                      color='variant', color_discrete_map=main_lineages_color_scheme,
-                     barmode='overlay',
+                     barmode='stack',
                      custom_data=['variant', 'Count', 'date_initial', 'date_2weeks'],
                      labels={'variant': 'Lineage', 'Count': 'Percentage', 'date_2weeks': 'Date'})
         fig.update_yaxes(title="Proportion of Genomes")

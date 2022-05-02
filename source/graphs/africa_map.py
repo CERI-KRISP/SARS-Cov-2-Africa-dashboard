@@ -235,8 +235,8 @@ def colorpath_africa_map(df_africa, column, color_pallet):
                                 title="Cumulative genomes produced since {}".format(initial_date)
                                 )
         fig_map.update_layout(geo_scope="africa", geo_resolution=50)
-        fig_map.update_geos(visible=False, showcoastlines=True, showcountries=True, showlakes=True, showland=True,
-                            showrivers=True, showsubunits=True, subunitcolor='#3E8989')
+        fig_map.update_geos(visible=False, showcoastlines=True, showcountries=True, showland=True,
+                            showsubunits=True, subunitcolor='#3E8989')
         fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
                               legend=dict(orientation='h')
                               )

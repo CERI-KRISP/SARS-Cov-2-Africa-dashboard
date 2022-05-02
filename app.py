@@ -17,6 +17,7 @@ def main():
         page_title="SARS-COV-2 Dashboard - Genomics Africa ",
         layout="wide",
         initial_sidebar_state="expanded",
+        page_icon="img/cropped-ceri_branco-01-150x150.png"
     )
 
     st.markdown(css_changes, unsafe_allow_html=True)
@@ -32,8 +33,6 @@ def main():
         df_africa, last_update = process_data_from_gisaid_api(last_update)
     else:
         print("Invalid data source. Please, see the documentation.")
-
-    # TODO: fazer função para contar as variantes por data e país (substituir arquivo Houriiyah)
 
     ## Add sidebar to the app
     st.sidebar.title("GENOMICS AFRICA")
@@ -119,7 +118,16 @@ def main():
 
     ########### TABLE WEEKLY VARIANT SUMMARY #########
     st.header("Variant details")
-    weekly_variants_df = pd.read_csv("data/Africa_weekly_variant_summary.csv")
+    weekly_variants_df = pd.read_csv("data/variants_summary_table.csv", usecols=['Variants', 'Lineage_sublineage',
+                                                                                 'FirstSequence',
+                                                                                 'Total_Confirmed', 'SamplesPast30',
+                                                                                 'DaysSince'])
+    weekly_variants_df = weekly_variants_df[['Variants', 'Lineage_sublineage', 'FirstSequence', 'Total_Confirmed',
+                                             'SamplesPast30', 'DaysSince']]
+    rename_weekly_columns = {'Lineage_sublineage': 'Lineage/sub-lineages', 'Total_Confirmed': 'Total sequences',
+                          'SamplesPast30': 'Sampled and submitted last 30 days',
+                          'FirstSequence': 'First sequence', 'DaysSince': 'Days since last sequence'}
+    weekly_variants_df.rename(columns=rename_weekly_columns, inplace=True)
     with st.container():
         with st.expander("Africa weekly variant summary"):
             st.table(weekly_variants_df)

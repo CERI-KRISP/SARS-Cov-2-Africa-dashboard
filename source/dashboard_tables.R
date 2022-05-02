@@ -1,98 +1,92 @@
+#!/bin/sh
+
 #Load libraries
 library(readr)
 library(dplyr)
 library(tidyr)
 library(lubridate)
+
 #read data file
-Africa_df <- read.csv("df_processed.csv")
+Africa_df <- read.csv("../data/all_data_processed.csv")
 
-#create buckets for and clade assignment
-alpha <- c("VOC Alpha GRY (B.1.1.7+Q.*) first detected in the UK")
-beta <- c("VOC Beta GH/501Y.V2 (B.1.351+B.1.351.2+B.1.351.3) first detected in South Africa")
-delta <- c("VOC Delta GK (B.1.617.2+AY.*) first detected in India")
-omicron <- c("VOC Omicron GRA (B.1.1.529+BA.*) first detected in Botswana/Hong Kong/South Africa")
-a.23.1 <- c("A.23.1")
-b.1.1.318 <- c("B.1.1.318")
-c.1 <- c("C.1")
-c.1.2 <- c("C.1.2")
-c.36.3 <- c("C.36.3")
-eta <- c("VOI Eta G/484K.V3 (B.1.525) first detected in UK/Nigeria")
-
-#bin data into buckets
-Africa_df <- Africa_df %>% mutate(variant_clade = ifelse(Africa_df$covv_variant %in% alpha, "Alpha", ifelse(
-                                    Africa_df$covv_variant %in% beta, "Beta", ifelse(
-                                      Africa_df$covv_variant %in% delta, "Delta", ifelse(
-                                        Africa_df$covv_variant %in% omicron, "Omicron", ifelse(
-                                          Africa_df$covv_variant %in% a.23.1, "A.23.1", ifelse(
-                                            Africa_df$covv_variant %in% b.1.1.318, "B.1.1.318", ifelse(
-                                              Africa_df$covv_variant %in% c.1, "C.1", ifelse(
-                                                Africa_df$covv_variant %in% c.1.2, "C.1.2", ifelse(
-                                                  Africa_df$covv_variant %in% c.36.3, "C.36.3", ifelse(
-                                                    Africa_df$covv_variant %in% eta, "Eta", "Other Lineages"
-                                  )))))))))))
-                                  
 #sorting by date to simplify extraction for first and most recent sample collection
-
-Africa_df$covv_collection_date<-dmy(Africa_df$covv_collection_date)
-Africa_df$covv_subm_date<-dmy(Africa_df$covv_subm_date)
-Africa_df <- Africa_df[order(Africa_df$covv_collection_date),]
+#ymd function requires date formatted with any separator but as YYYY-MM-DD, previously date had been in dmy format as DD-MM-YYYY
+Africa_df$collection_date<-ymd(Africa_df$collection_date)
+Africa_df$subm_date<-ymd(Africa_df$subm_date)
+Africa_df <- Africa_df[order(Africa_df$collection_date),]
 #remove missing/incorrectly formatted dates
-cutoff=dmy("01-01-2018")
-Africa_df <- filter(Africa_df, covv_collection_date>cutoff)
+cutoff=ymd("2018-01-01")
+Africa_df <- filter(Africa_df, collection_date>cutoff)
 
-#sorting data into variant specific frames (potential space to parallelise task)
-alpha_data <- Africa_df[Africa_df$variant_clade=="Alpha",]
-beta_data <- Africa_df[Africa_df$variant_clade=="Beta",]
-delta_data <- Africa_df[Africa_df$variant_clade=="Delta",]
-omicron_data <- Africa_df[Africa_df$variant_clade=="Omicron",]
-a231_data <- Africa_df[Africa_df$variant_clade=="A.23.1",]
-b11318_data <- Africa_df[Africa_df$variant_clade=="B.1.1.318",]
-c1_data <- Africa_df[Africa_df$variant_clade=="C.1",]
-c12_data <- Africa_df[Africa_df$variant_clade=="C.1.2",]
-c363_data <- Africa_df[Africa_df$variant_clade=="C.36.3",]
-eta_data <- Africa_df[Africa_df$variant_clade=="Eta",]
-other_data <- Africa_df[Africa_df$variant_clade=="Other Lineages",]
+#sorting data into variant specific frames, removed preprocessing step as it isn't necessary anymore. 
+#note non-voc/voi data is no longer stored
+alpha_data <- Africa_df[Africa_df$variant=="Alpha",]
+beta_data <- Africa_df[Africa_df$variant=="Beta",]
+delta_data <- Africa_df[Africa_df$variant=="Delta",]
+omicron_data <- Africa_df[Africa_df$variant=="Omicron",]
+a231_data <- Africa_df[Africa_df$variant_GISAID_name=="A.23.1",]
+b11318_data <- Africa_df[Africa_df$variant_GISAID_name=="B.1.1.318",]
+c1_data <- Africa_df[Africa_df$variant_GISAID_name=="C.1",]
+c12_data <- Africa_df[Africa_df$variant_GISAID_name=="C.1.2",]
+c363_data <- Africa_df[Africa_df$variant_GISAID_name=="C.36.3",]
+eta_data <- Africa_df[Africa_df$variant_GISAID_name=="VOI Eta G/484K.V3 (B.1.525) first detected in UK/Nigeria",]
 
 #earliest sample collection
-firstSequence <-c(alpha_data[1,3],beta_data[1,3],delta_data[1,3],omicron_data[1,3],a231_data[1,3],b11318_data[1,3],c1_data[1,3],c12_data[1,3],c363_data[1,3],eta_data[1,3])
+FirstSequence <-c(alpha_data[1,2],beta_data[1,2],delta_data[1,2],omicron_data[1,2],a231_data[1,2],b11318_data[1,2],c1_data[1,2],c12_data[1,2],c363_data[1,2],eta_data[1,2])
 #most recent sample collection
-lastSequence <-c(alpha_data[nrow(alpha_data),3],beta_data[nrow(beta_data),3],delta_data[nrow(delta_data),3],omicron_data[nrow(omicron_data),3],a231_data[nrow(a231_data),3],b11318_data[nrow(b11318_data),3],c1_data[nrow(c1_data),3],c12_data[nrow(c12_data),3],c363_data[nrow(c363_data),3],eta_data[nrow(eta_data),3])
+LastSequence <-c(alpha_data[nrow(alpha_data),2],beta_data[nrow(beta_data),2],delta_data[nrow(delta_data),2],omicron_data[nrow(omicron_data),2],a231_data[nrow(a231_data),2],b11318_data[nrow(b11318_data),2],c1_data[nrow(c1_data),2],c12_data[nrow(c12_data),2],c363_data[nrow(c363_data),2],eta_data[nrow(eta_data),2])
 
 #new submissions in past 30 days
 curr_date=Sys.Date()-30
-alphap30 <- filter(alpha_data, covv_subm_date>=curr_date)
-betap30 <-filter(beta_data, covv_subm_date>=curr_date)
-deltap30 <-filter(delta_data, covv_subm_date>=curr_date)
-omicronp30 <-filter(omicron_data, covv_subm_date>=curr_date)
-a231p30 <-filter(a231_data, covv_subm_date>=curr_date)
-b11318p30 <-filter(b11318_data, covv_subm_date>=curr_date)
-c1p30 <-filter(c1_data, covv_subm_date>=curr_date)
-c12p30 <-filter(c12_data, covv_subm_date>=curr_date)
-c363p30 <-filter(c363_data, covv_subm_date>=curr_date)
-etap30 <-filter(eta_data, covv_subm_date>=curr_date)
+alphap30 <- filter(alpha_data, subm_date>=curr_date)
+betap30 <-filter(beta_data, subm_date>=curr_date)
+deltap30 <-filter(delta_data, subm_date>=curr_date)
+omicronp30 <-filter(omicron_data, subm_date>=curr_date)
+a231p30 <-filter(a231_data, subm_date>=curr_date)
+b11318p30 <-filter(b11318_data, subm_date>=curr_date)
+c1p30 <-filter(c1_data, subm_date>=curr_date)
+c12p30 <-filter(c12_data, subm_date>=curr_date)
+c363p30 <-filter(c363_data, subm_date>=curr_date)
+etap30 <-filter(eta_data, subm_date>=curr_date)
 
 #new samples in past 30 days
-alphacp30 <- filter(alpha_data, covv_collection_date>=curr_date)
-betacp30 <-filter(beta_data, covv_collection_date>=curr_date)
-deltacp30 <-filter(delta_data, covv_collection_date>=curr_date)
-omicroncp30 <-filter(omicron_data, covv_collection_date>=curr_date)
-a231cp30 <-filter(a231_data, covv_collection_date>=curr_date)
-b11318cp30 <-filter(b11318_data, covv_collection_date>=curr_date)
-c1cp30 <-filter(c1_data, covv_collection_date>=curr_date)
-c12cp30 <-filter(c12_data, covv_collection_date>=curr_date)
-c363cp30 <-filter(c363_data, covv_collection_date>=curr_date)
-etacp30 <-filter(eta_data, covv_collection_date>=curr_date)
+alphacp30 <- filter(alpha_data, collection_date>=curr_date)
+betacp30 <-filter(beta_data, collection_date>=curr_date)
+deltacp30 <-filter(delta_data, collection_date>=curr_date)
+omicroncp30 <-filter(omicron_data, collection_date>=curr_date)
+a231cp30 <-filter(a231_data, collection_date>=curr_date)
+b11318cp30 <-filter(b11318_data, collection_date>=curr_date)
+c1cp30 <-filter(c1_data, collection_date>=curr_date)
+c12cp30 <-filter(c12_data, collection_date>=curr_date)
+c363cp30 <-filter(c363_data, collection_date>=curr_date)
+etacp30 <-filter(eta_data, collection_date>=curr_date)
+
+#find lineage names, combine into single string for ease of tabulation
+alpha_lineage <- paste(unlist(as.character(unique(alpha_data$lineage))),collapse=", ")
+beta_lineage <- paste(unlist(as.character(unique(beta_data$lineage))),collapse=", ")
+delta_lineage <- paste(unlist(as.character(unique(delta_data$lineage))),collapse=", ")
+omicron_lineage <- paste(unlist(as.character(unique(omicron_data$lineage))),collapse=", ")
+a231_lineage <- paste(unlist(as.character(unique(a231_data$lineage))),collapse=", ")
+b11318_lineage <- paste(unlist(as.character(unique(b11318_data$lineage))),collapse=", ")
+c1_lineage <- paste(unlist(as.character(unique(c1_data$lineage))),collapse=", ")
+c12_lineage <- paste(unlist(as.character(unique(c12_data$lineage))),collapse=", ")
+c363_lineage <- paste(unlist(as.character(unique(c363_data$lineage))),collapse=", ")
+eta_lineage <- paste(unlist(as.character(unique(eta_data$lineage))),collapse=", ")
+
 
 #create column vectors for tibble (retains date format the best)
-cd=Sys.Date()
+cd=ymd(Sys.Date())
 Variants<-c('Alpha', 'Beta','Delta','Omicron','A.23.1','B.1.1.318','C.1','C.1.2','C.36.3','Eta')
-Alternative_names<-c("VOC-2020-12-01","VOC-2020-12-02", "VOC-2021-03-02", "VOC-2021-11-26", "NA", "VUM-2021-06-04", "NA", "VUM-2021-09-01", "VUM-2021-06-16", "VUM-2021-02-03")
-Lineage_sublineage<-c('B.1.1.7, AZ.X','B.1.351, B1.351.X','B.1.617.2, AY.X','B.1.1.529, BA.X', 'A.23.1','B.1.1.318','C.1','C.1.2','C.36.3','B.1.525')
+#alternative name column no longer needed
+#Alternative_names<-c("VOC-2020-12-01","VOC-2020-12-02", "VOC-2021-03-02", "VOC-2021-11-26", "NA", "VUM-2021-06-04", "NA", "VUM-2021-09-01", "VUM-2021-06-16", "VUM-2021-02-03")
+Lineage_sublineage<-c(alpha_lineage,beta_lineage,delta_lineage,omicron_lineage, a231_lineage,b11318_lineage,c1_lineage,c12_lineage,c363_lineage,eta_lineage)
 Total_Confirmed<-c(nrow(alpha_data), nrow(beta_data), nrow(delta_data), nrow(omicron_data), nrow(a231_data), nrow(b11318_data), nrow(c1_data), nrow(c12_data), nrow(c363_data), nrow(eta_data))
 SeqsPast30<-c(nrow(alphap30), nrow(betap30), nrow(deltap30), nrow(omicronp30), nrow(a231p30), nrow(b11318p30), nrow(c1p30), nrow(c12p30), nrow(c363p30), nrow(etap30))
 SamplesPast30<-c(nrow(alphacp30), nrow(betacp30), nrow(deltacp30), nrow(omicroncp30), nrow(a231cp30), nrow(b11318cp30), nrow(c1cp30), nrow(c12cp30), nrow(c363cp30), nrow(etacp30))
-DaysSince<-c(cd-alpha_data[nrow(alpha_data),3], cd-beta_data[nrow(beta_data),3], cd-delta_data[nrow(delta_data),3], cd-omicron_data[nrow(omicron_data),3], cd-a231_data[nrow(a231_data),3], cd-b11318_data[nrow(b11318_data),3], cd-c1_data[nrow(c1_data),3], cd-c12_data[nrow(c12_data),3], cd-c363_data[nrow(c363_data),3], cd-eta_data[nrow(eta_data),3])
+#Dayssince refers to days since last sample collection, this was previously in the third column but is now in the second.
+DaysSince<-c(cd-alpha_data[nrow(alpha_data),2], cd-beta_data[nrow(beta_data),2], cd-delta_data[nrow(delta_data),2], cd-omicron_data[nrow(omicron_data),2], cd-a231_data[nrow(a231_data),2], cd-b11318_data[nrow(b11318_data),2], cd-c1_data[nrow(c1_data),2], cd-c12_data[nrow(c12_data),2], cd-c363_data[nrow(c363_data),2], cd-eta_data[nrow(eta_data),2])
 
-alldata<- tibble(Variants,Alternative_names,Lineage_sublineage,Total_Confirmed,SeqsPast30,SamplesPast30,firstSequence,lastSequence,DaysSince)
-write.csv(alldata, file = "AllVariantsTable.csv")
+alldata<- tibble(Variants,Lineage_sublineage,Total_Confirmed,SeqsPast30,SamplesPast30,FirstSequence,LastSequence,DaysSince)
+
+write.csv(alldata, file = "../data/variants_summary_table.csv")
 

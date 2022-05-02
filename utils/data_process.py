@@ -10,6 +10,7 @@ import streamlit as st
 
 from utils.dicts import variant_names, variant_cutoffs, standardize_country_names
 from utils.functions import lineages_to_concerned_variants
+import subprocess
 
 @st.experimental_memo(suppress_st_warning=True)
 def process_data_from_gisaid_api(last_update):
@@ -107,11 +108,14 @@ def process_data_from_gisaid_api(last_update):
 
     # standardize country names
     df.replace({"country": standardize_country_names}, inplace=True)
-    # df.to_csv("data/analyses/africa_dashboard_22_04_2022.csv", index=False)
+
+    # save file for using in table
+    df.to_csv("data/all_data_processed.csv", index=False)
+    subprocess.Popen(['Rscript','source/dashboard_tables.R'])
     return df, last_update
 
 def process_data_from_gisaid_metadata():
-    df_path = "./data/metadata.csv"
+    df_path = "../data/metadata.csv"
     df = pd.read_csv(df_path)
     #TODO: mudar colunas para pegar as originais dos metadados e padronizar com as
     df = df[df.pangolin_lineage != 'None']
