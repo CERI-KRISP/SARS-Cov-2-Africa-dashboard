@@ -111,7 +111,7 @@ def process_data_from_gisaid_api(last_update):
 
     # save file for using in table
     df.to_csv("data/all_data_processed.csv", index=False)
-    subprocess.Popen(['Rscript','source/dashboard_tables.R'])
+   # subprocess.Popen(['Rscript','source/dashboard_tables.R'])
     return df, last_update
 
 def process_data_from_gisaid_metadata():
