@@ -214,7 +214,11 @@ def colorpath_africa_map(df_africa, column, color_pallet):
 
     # cumulative count column
     df_map = df_map.sort_values(by='date_2weeks')
+    df_map['Count'].fillna(0, inplace=True)
     df_map['cum_counts'] = df_map[['country', 'Count']].groupby('country').cumsum()
+
+    #filling NaN values with previous value
+    df_map['cum_counts'].fillna(method='ffill', inplace=True)
 
     # Building hover text
     # Column date initial
@@ -223,7 +227,8 @@ def colorpath_africa_map(df_africa, column, color_pallet):
     with st.container():
         # Figure title
         # c.markdown("##### Cumulative genomes produced since {}".format(initial_date))
-        c.caption("Showing cumulative numbers")
+        c.caption("Showing cumulative numbers.")
+
         fig_map = px.choropleth(df_map,
                                 locations='country', geojson=africa_geojson, featureidkey="properties.sovereignt",
                                 color='cum_counts',
@@ -240,7 +245,9 @@ def colorpath_africa_map(df_africa, column, color_pallet):
         fig_map.update_layout(height=600, margin={"r": 0, "t": 0, "l": 0, "b": 0},
                               legend=dict(orientation='h')
                               )
-        fig_map.update_layout(title_y=0.2)
+        fig_map.update_layout(title_y=0.2, annotations=[dict(x=1, y=0, xref='paper', yref='paper',
+                                                             text='Countries in grey do not have any data submitted to GISAID',
+                                                             showarrow=False)])
 
         # creating standardize hover template
         custom_hovertemplate = '<b>%{customdata[0]} </b><br><br>' + \

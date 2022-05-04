@@ -12,9 +12,14 @@ def variants_bar_plot(variants_percentage, column):
     variants_percentage['date_initial'] = variants_percentage['date_initial'].dt.strftime('%Y-%m-%d')
     variants_percentage['Count'] = variants_percentage['Count'].astype(int)
 
+    # Reordering variant categories
+    variants_order = ['Omicron', 'Delta', 'Alpha', 'Beta', 'Gamma', 'Other Lineages']
+    variants_percentage['variant'] = variants_percentage['variant'].astype('category')
+    variants_percentage['variant'].cat.reorder_categories(variants_order, inplace=True)
+
     with st.container():
         c.subheader("Circulating lineages and variants")
-        fig = px.bar(variants_percentage.sort_values(by='variant', ascending=True), x='date_2weeks', y='Count',
+        fig = px.bar(variants_percentage.sort_values(by='variant'), x='date_2weeks', y='Count',
                      color='variant', color_discrete_map=main_lineages_color_scheme,
                      barmode='stack',
                      custom_data=['variant', 'Count', 'date_initial', 'date_2weeks'],

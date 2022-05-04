@@ -99,7 +99,7 @@ def main():
          # 'Variants proportion'
          ))
     if map_option == 'Total of genomes':
-        colorpath_africa_map(df_count, column=c1, color_pallet="algae")
+        colorpath_africa_map(df_count, column=c1, color_pallet="Greens")
     elif map_option == 'Genomes by variant':
         # Multiselect to choose variants to show
         voc_selected = c1.selectbox("Choose VOC to show", concerned_variants)
@@ -137,25 +137,29 @@ def main():
         with c1_2.expander("Alpha variant"):
             alpha_img = Image.open("data/figures/alpha-stanford-3-1536x226.png")
             st.image(alpha_img, caption="SARS_CoV2 Alpha variant sequence")
-            countries_with_sequences_chart_one_variant(df_count, st, variant='Alpha', start_date=start_date)
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Alpha', start_date=start_date,
+                                                       color=main_lineages_color_scheme.get('Alpha'))
 
     with c2_2.container():
         with c2_2.expander("Beta variant"):
             beta_img = Image.open("data/figures/Beta-stanford.png")
             st.image(beta_img, caption="SARS_CoV2 Beta variant sequence")
-            countries_with_sequences_chart_one_variant(df_count, st, variant='Beta', start_date=start_date)
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Beta', start_date=start_date,
+                                                       color=main_lineages_color_scheme.get('Beta'))
 
     with c1_2.container():
         with c1_2.expander("Delta variant"):
             delta_img = Image.open("data/figures/Delta-stanford.png")
             st.image(delta_img, caption="SARS_CoV2 Delta variant sequence")
-            countries_with_sequences_chart_one_variant(df_count, st, variant='Delta', start_date=start_date)
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Delta', start_date=start_date,
+                                                       color=main_lineages_color_scheme.get('Delta'))
 
     with c2_2.container():
         with c2_2.expander("Omicron variant"):
             omicron_img = Image.open("data/figures/omicron-stanford.png")
             st.image(omicron_img, caption="SARS_CoV2 Omicron variant sequence")
-            countries_with_sequences_chart_one_variant(df_count, st, variant='Omicron', start_date=start_date)
+            countries_with_sequences_chart_one_variant(df_count, st, variant='Omicron', start_date=start_date,
+                                                       color=main_lineages_color_scheme.get('Omicron'))
 
     # with c1_2.container():
     #     with c1_2.expander("A.23.1 variant"):

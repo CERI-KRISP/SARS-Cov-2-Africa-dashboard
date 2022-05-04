@@ -44,7 +44,7 @@ def countries_with_sequences_chart(df_count, column):
         c.plotly_chart(country_lineages, use_container_width=True)
 
 
-def countries_with_sequences_chart_one_variant(df_count, column, variant, start_date):
+def countries_with_sequences_chart_one_variant(df_count, column, variant, start_date, color):
     c = column
     df_country_lineages = df_count[df_count['variant'] == variant]
 
@@ -54,7 +54,7 @@ def countries_with_sequences_chart_one_variant(df_count, column, variant, start_
     with st.container():
         country_lineages = px.scatter(df_country_lineages.sort_values(by='variant', ascending=False), x="date_2weeks",
                                       y="country", color="variant", custom_data=['country','variant', 'date_2weeks', 'Count'],
-                                      color_discrete_sequence=['#6c757d'])
+                                      color_discrete_sequence=[color])
         country_lineages.update_traces(marker=dict(size=13, line=dict(width=0.5, color='#E5ECF6')))
         country_lineages.update_layout(legend=dict(
             orientation="h",
