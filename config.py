@@ -1,5 +1,3 @@
-import streamlit as st
-from utils.functions import remote_css
 
 #Fill data_source variable with 'GISAID_API' if you are going to use GISAID feed data or 'metadata' to use a metadata file
 data_source = "GISAID_API"
