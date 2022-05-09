@@ -2,10 +2,12 @@ import streamlit as st
 import plotly.express as px
 import pandas as pd
 from datetime import timedelta, datetime
+import plotly.graph_objs as go
 
 from utils.dicts import main_lineages_color_scheme
 
 
+@st.cache(suppress_st_warning=True, hash_funcs={go.graph_objs.Figure: lambda _: None}, allow_output_mutation=True)
 def countries_with_sequences_chart(df_count, column):
     c = column
     df_country_lineages = df_count.copy()
@@ -43,7 +45,7 @@ def countries_with_sequences_chart(df_count, column):
 
         c.plotly_chart(country_lineages, use_container_width=True)
 
-
+@st.cache(suppress_st_warning=True, hash_funcs={go.graph_objs.Figure: lambda _: None}, allow_output_mutation=True)
 def countries_with_sequences_chart_one_variant(df_count, column, variant, start_date, color):
     c = column
     df_country_lineages = df_count[df_count['variant'] == variant]
