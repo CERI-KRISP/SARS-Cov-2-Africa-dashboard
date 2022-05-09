@@ -7,7 +7,6 @@ import plotly.graph_objs as go
 
 #TODO consertar esse gráfico pra calcular porcentagem para todas as variantes
 
-@st.cache(suppress_st_warning=True, hash_funcs={go.graph_objs.Figure: lambda _: None}, allow_output_mutation=True)
 def variants_bar_plot(variants_percentage, column):
     c = column
     variants_percentage['date_initial'] = pd.to_datetime(variants_percentage['date_2weeks']) - timedelta(days=14)

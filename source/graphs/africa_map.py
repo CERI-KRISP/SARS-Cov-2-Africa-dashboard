@@ -198,7 +198,6 @@ def map_fill_na_values(df, map_count_column):
 
 
 # TODO: Map to show number of cumulative genomes in total
-@st.cache(suppress_st_warning=True, hash_funcs={go.graph_objs.Figure: lambda _: None}, allow_output_mutation=True)
 def colorpath_africa_map(df_africa, column, color_pallet):
     # df_africa is a dataframe with the number for each variant per country and per day
     c = column
