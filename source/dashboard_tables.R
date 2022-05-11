@@ -7,7 +7,7 @@ library(tidyr)
 library(lubridate)
 
 #read data file
-Africa_df <- read.csv("../data/all_data_processed.csv")
+Africa_df <- read.csv("data/all_data_processed.csv")
 
 #sorting by date to simplify extraction for first and most recent sample collection
 #ymd function requires date formatted with any separator but as YYYY-MM-DD, previously date had been in dmy format as DD-MM-YYYY
@@ -88,5 +88,5 @@ DaysSince<-c(cd-alpha_data[nrow(alpha_data),2], cd-beta_data[nrow(beta_data),2],
 
 alldata<- tibble(Variants,Lineage_sublineage,Total_Confirmed,SeqsPast30,SamplesPast30,FirstSequence,LastSequence,DaysSince)
 
-write.csv(alldata, file = "../data/variants_summary_table.csv")
+write.csv(alldata, file = "data/variants_summary_table.csv")
 
