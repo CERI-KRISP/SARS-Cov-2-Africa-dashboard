@@ -5,7 +5,6 @@ from source.pages.header import *
 from source.graphs.africa_map import *
 from source.graphs.variants_proportion import variants_bar_plot
 from source.graphs.countries_sequences import countries_with_sequences_chart, countries_with_sequences_chart_one_variant
-from utils.data_process import *
 
 # Import Python Libraries
 import pandas as pd
@@ -23,16 +22,11 @@ def main():
     st.markdown(css_changes, unsafe_allow_html=True)
     remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
-    ##### CHECK LAST UPDATE #####
-    last_update = last_file_update('data/gisaid_data/provision.json.xz')
+    ## Getting the data
+    df_africa = pd.read_csv('data/all_data_processed.csv')
 
-    ##### CHECK VARIABLE FOR INPUT ######
-    if data_source == "metadata":
-        df_africa = process_data_from_gisaid_metadata()
-    if data_source == "GISAID_API":
-        df_africa, last_update = process_data_from_gisaid_api(last_update)
-    else:
-        print("Invalid data source. Please, see the documentation.")
+    ##### CHECK LAST UPDATE #####
+    last_update = last_file_update('data/all_data_processed.csv')
 
     ## Add sidebar to the app
     st.sidebar.title("GENOMICS AFRICA")

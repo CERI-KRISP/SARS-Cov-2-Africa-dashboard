@@ -20,7 +20,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          streamlit run app.py
+          python data_process.py
+          Rscript source/dashboard_tables.R
+
 
       - name: commit files
         run: |
