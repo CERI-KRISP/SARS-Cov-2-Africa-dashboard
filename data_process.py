@@ -1,4 +1,4 @@
-import os
+from sys import argv
 import numpy as np
 import requests
 import lzma
@@ -8,15 +8,8 @@ import pandas as pd
 from utils.dicts import variant_names, variant_cutoffs, standardize_country_names
 from utils.functions import lineages_to_concerned_variants
 
-def process_data_from_gisaid_api():
-    try:
-        base_url = os.environ['GISAID_URL']
-        username = os.environ['GISAID_USERNAME']
-        password = os.environ['GISAID_PASSWORD']
-    except:
-        print("Environmental variables not found! \n Please inform see the documentation on "
-              "https://github.com/joicy/SARS-Cov-2-Africa-dashboard for more details")
 
+def process_data_from_gisaid_api(base_url, username, password):
     headers = {'Content-Type': 'application/json'}
 
     req = requests.get(base_url, headers=headers, auth=(username, password))
@@ -119,18 +112,22 @@ def main():
     COVID_DASHBOARD_SOURCE should be GISAID_API or metadata
     '''
 
+    data_source = argv[1]
+    base_url = argv[2]
+    username = argv[3]
+    password = argv[4]
     try:
-        data_source = os.environ['COVID_DASHBOARD_SOURCE']
+        if data_source == "metadata":
+            process_data_from_gisaid_metadata()
+        if data_source == "GISAID_API":
+            process_data_from_gisaid_api(base_url, username, password)
+        else:
+            print("Invalid data source. Please, see the documentation.")
     except:
         print("Data source variable not found! \n Please see the documentation on "
               "https://github.com/joicy/SARS-Cov-2-Africa-dashboard for more details")
 
-    if data_source == "metadata":
-        process_data_from_gisaid_metadata()
-    if data_source == "GISAID_API":
-        process_data_from_gisaid_api()
-    else:
-        print("Invalid data source. Please, see the documentation.")
+
 
 if __name__ == "__main__":
     main()
