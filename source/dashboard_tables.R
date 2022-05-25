@@ -1,4 +1,5 @@
 #!/bin/sh
+install.packages("lubridate", "http://cran.r-project.org")
 pkgLoad <- function( packages = "favorites" ) {
 
     if( length( packages ) == 1L && packages == "favorites" ) {
@@ -28,7 +29,7 @@ pkgLoad <- function( packages = "favorites" ) {
 # library(readr)
 # library(dplyr)
 # library(tidyr)
-# library(lubridate)
+library(lubridate)
 
 #read data file
 Africa_df <- read.csv("data/all_data_processed.csv")
