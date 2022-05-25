@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          python data_process.py
+          python python data_process.py ${{ secrets.COVID_DASHBOARD_SOURCE }} ${{ secrets.GISAID_URL }} ${{ secrets.GISAID_USERNAME }} ${{ secrets.GISAID_PASSWORD}}
           Rscript source/dashboard_tables.R
 
 
