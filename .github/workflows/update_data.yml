@@ -1,7 +1,7 @@
 name: update-covid-data
 on:
   schedule:
-    - cron: "30 4 * * *"
+    - cron: '*/5 * * * *'
 env:
   COVID_DASHBOARD_SOURCE: 'GISAID_API'
   GISAID_URL: 'https://www.epicov.org/epi3/3p/genafricadash/export/provision.json.xz'
