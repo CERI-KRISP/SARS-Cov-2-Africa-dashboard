@@ -113,6 +113,7 @@ def main():
     '''
 
     data_source = argv[1]
+    print(data_source)
     base_url = argv[2]
     username = argv[3]
     password = argv[4]
