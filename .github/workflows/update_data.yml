@@ -1,7 +1,7 @@
 name: update-covid-data
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: "30 4 * * *"
 env:
   COVID_DASHBOARD_SOURCE: 'GISAID_API'
   GISAID_URL: 'https://www.epicov.org/epi3/3p/genafricadash/export/provision.json.xz'
@@ -25,7 +25,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python data_process.py $COVID_DASHBOARD_SOURCE $GISAID_URL $GISAID_USERNAME $GISAID_PASSWORD
-          Rscript source/dashboard_tables.R
+#          Rscript source/dashboard_tables.R
 
 
       - name: commit files
