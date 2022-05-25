@@ -2,8 +2,7 @@
 pkgLoad <- function( packages = "favorites" ) {
 
     if( length( packages ) == 1L && packages == "favorites" ) {
-        packages <- c( "readr", "dplyr", "tidyr", "lubridate"
-        )
+        packages <- c( "readr", "dplyr", "tidyr", "lubridate")
     }
 
     packagecheck <- match( packages, utils::installed.packages()[,1] )
@@ -12,7 +11,7 @@ pkgLoad <- function( packages = "favorites" ) {
 
     if( length( packagestoinstall ) > 0L ) {
         utils::install.packages( packagestoinstall,
-                             repos = "http://cran.csiro.au"
+                             repos = "http://cran.r-project.org"
         )
     } else {
         print( "All requested packages already installed" )
@@ -36,11 +35,11 @@ Africa_df <- read.csv("data/all_data_processed.csv")
 
 #sorting by date to simplify extraction for first and most recent sample collection
 #ymd function requires date formatted with any separator but as YYYY-MM-DD, previously date had been in dmy format as DD-MM-YYYY
-Africa_df$collection_date<-ymd(Africa_df$collection_date)
+Africa_df$collection_date<-lubridate::ymd(Africa_df$collection_date)
 Africa_df$subm_date<-ymd(Africa_df$subm_date)
 Africa_df <- Africa_df[order(Africa_df$collection_date),]
 #remove missing/incorrectly formatted dates
-cutoff=ymd("2018-01-01")
+cutoff=lubridate::ymd("2018-01-01")
 Africa_df <- filter(Africa_df, collection_date>cutoff)
 
 #sorting data into variant specific frames, removed preprocessing step as it isn't necessary anymore. 
@@ -100,7 +99,7 @@ eta_lineage <- paste(unlist(as.character(unique(eta_data$lineage))),collapse=", 
 
 
 #create column vectors for tibble (retains date format the best)
-cd=ymd(Sys.Date())
+cd=lubridate::ymd(Sys.Date())
 Variants<-c('Alpha', 'Beta','Delta','Omicron','A.23.1','B.1.1.318','C.1','C.1.2','C.36.3','Eta')
 #alternative name column no longer needed
 #Alternative_names<-c("VOC-2020-12-01","VOC-2020-12-02", "VOC-2021-03-02", "VOC-2021-11-26", "NA", "VUM-2021-06-04", "NA", "VUM-2021-09-01", "VUM-2021-06-16", "VUM-2021-02-03")
