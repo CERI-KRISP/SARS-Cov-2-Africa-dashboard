@@ -1,4 +1,4 @@
-name: update-covid-data
+name: update-covid-data-5-minutes
 on:
   schedule:
     - cron: '*/5 * * * *'
