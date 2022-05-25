@@ -1,10 +1,35 @@
 #!/bin/sh
+pkgLoad <- function( packages = "favorites" ) {
 
+    if( length( packages ) == 1L && packages == "favorites" ) {
+        packages <- c( "readr", "dplyr", "tidyr", "lubridate"
+        )
+    }
+
+    packagecheck <- match( packages, utils::installed.packages()[,1] )
+
+    packagestoinstall <- packages[ is.na( packagecheck ) ]
+
+    if( length( packagestoinstall ) > 0L ) {
+        utils::install.packages( packagestoinstall,
+                             repos = "http://cran.csiro.au"
+        )
+    } else {
+        print( "All requested packages already installed" )
+    }
+
+    for( package in packages ) {
+        suppressPackageStartupMessages(
+            library( package, character.only = TRUE, quietly = TRUE )
+        )
+    }
+
+}
 #Load libraries
-library(readr)
-library(dplyr)
-library(tidyr)
-library(lubridate)
+# library(readr)
+# library(dplyr)
+# library(tidyr)
+# library(lubridate)
 
 #read data file
 Africa_df <- read.csv("data/all_data_processed.csv")
