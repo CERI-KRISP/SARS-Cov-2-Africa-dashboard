@@ -1,5 +1,4 @@
 #!/bin/sh
-install.packages("lubridate", "http://cran.r-project.org")
 pkgLoad <- function( packages = "favorites" ) {
 
     if( length( packages ) == 1L && packages == "favorites" ) {
@@ -26,9 +25,9 @@ pkgLoad <- function( packages = "favorites" ) {
 
 }
 #Load libraries
-# library(readr)
-# library(dplyr)
-# library(tidyr)
+library(readr)
+library(dplyr)
+library(tidyr)
 library(lubridate)
 
 #read data file
