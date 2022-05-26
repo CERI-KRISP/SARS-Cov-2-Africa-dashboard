@@ -25,7 +25,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python data_process.py $COVID_DASHBOARD_SOURCE $GISAID_URL $GISAID_USERNAME $GISAID_PASSWORD
-#          Rscript source/dashboard_tables.R
+          streamlit run app.py
+#         Rscript source/dashboard_tables.R
 
 
       - name: commit files
