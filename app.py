@@ -23,7 +23,7 @@ def main():
     remote_css('https://fonts.googleapis.com/icon?family=Material+Icons')
 
     ## Getting the data
-    df_africa = pd.read_csv('data/all_data_processed.csv')
+    df_africa = load_data('data/all_data_processed.csv')
 
     ##### CHECK LAST UPDATE #####
     last_update = last_file_update('data/all_data_processed.csv')

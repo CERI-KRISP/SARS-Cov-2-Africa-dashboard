@@ -11,6 +11,10 @@ from geopy.geocoders import Nominatim
 
 from utils.dicts import concerned_variants
 
+@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+def load_data(file):
+    df = pd.read_csv(file)
+    return df
 
 def lineages_to_concerned_variants(df, variant_column):
     var = []
